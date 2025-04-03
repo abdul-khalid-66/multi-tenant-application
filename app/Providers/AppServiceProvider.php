@@ -2,7 +2,15 @@
 
 namespace App\Providers;
 
+use App\Models\ProductReturn;
 use Illuminate\Support\ServiceProvider;
+use App\Models\ProductVariant;
+use App\Models\ReturnDetail;
+use App\Models\SaleDetail;
+use App\Observers\InventoryLogObserver;
+use App\Observers\ProductReturnObserver;
+use App\Observers\ReturnDetailObserver;
+use App\Observers\SaleDetailObserver;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -19,6 +27,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        ProductVariant::observe(InventoryLogObserver::class);
+        SaleDetail::observe(SaleDetailObserver::class);
+        ReturnDetail::observe(ReturnDetailObserver::class);
+        ProductReturn::observe(ProductReturnObserver::class);
     }
 }

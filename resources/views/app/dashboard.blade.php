@@ -10,7 +10,9 @@
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900">
                     {{ __("You're logged in!") }}
-                    <x-link-button href="{{ route('tenant.index') }}">Tenants</x-tenant-button>
+                    @role('admin') 
+                        <x-link-button href="{{ route('users.index') }}">Users</x-tenant-button>
+                    @endrole
                 </div>
             </div>
         </div>

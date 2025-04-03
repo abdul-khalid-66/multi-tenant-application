@@ -9,11 +9,15 @@ use Illuminate\Validation\Rules;
 class TenantController extends Controller
 {
     /**
+     * 
      * Display a listing of the resource.
      */
     public function index()
     {
         $tenants = Tenant::with('domains')->get();
+        if (!$tenants) {
+            return abort('404');
+        }
         return view('tenant.index', compact('tenants'));
     }
 
@@ -43,7 +47,7 @@ class TenantController extends Controller
             'domain' => $validate['domain_name'] . "." . config('app.domain'),
         ]);
 
-        return redirect()->back();
+        return redirect()->route('tenant.index');
     }
 
     /**

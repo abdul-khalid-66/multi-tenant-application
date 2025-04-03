@@ -1,15 +1,16 @@
 <x-tenant-app-layout>
 
     @push('css')
-        <link rel="stylesheet" href="{{ asset('css/table.css') }}">
+        <link rel="stylesheet" href="app/css/table.css">
+
     @endpush
 
     <x-slot name="header">
         <div class="flex justify-between items-center">
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                {{ __('Tenants') }}
+                {{ __('Users') }}
             </h2>
-            <x-link-button href="{{ route('tenant.create') }}">Create Tenant</x-link-button>
+            <x-link-button href="{{ route('users.create') }}">Create User</x-link-button>
         </div>
     </x-slot>
 
@@ -26,21 +27,22 @@
                                 <tr>
                                     <th style="width: 25%;">Name</th>
                                     <th style="width: 25%;">Email</th>
-                                    <th style="width: 30%;">Domain</th>
+                                    <th style="width: 25%;">Role</th>
+                                   
                                     <th style="width: 20%; text-align: center;">Action</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach ($tenants as $tenant)
+                                @foreach ($users as $user)
                                     <tr>
-                                        <td>{{ $tenant->name }}</td>
-                                        <td>{{ $tenant->email }}</td>
+                                        <td>{{ $user->name }}</td>
+                                        <td>{{ $user->email }}</td>
                                         <td>
-                                            @foreach ($tenant->domains as $domain)
-                                                {{ $domain->domain }} {{ $loop->last ? "":","}}
+                                            @foreach ($user->roles as $role)
+                                                {{ $role->name }} {{ $loop->last ? "":","}}
                                             @endforeach
                                         </td>
-                                        <td class="action-buttons">Edit | Delete</td>
+                                        <td class="action-buttons"> <a href="{{ route('users.edit',$user->id) }}">Edit</a>  | Delete</td>
                                     </tr>
                                 @endforeach
                                 

@@ -71,9 +71,9 @@
                                 </thead>
                                 <tbody class="bg-white divide-y divide-gray-200">
                                     @foreach($logs as $log)
-                                    <tr class="hover:bg-gray-50" data-product-id="{{ $log->product_id }}" data-variant-id="{{ $log->variant_id }}" data-date="{{ $log->date->format('Y-m-d') }}" data-reason="{{ $log->reason }}">
+                                    <tr class="hover:bg-gray-50" data-product-id="{{ $log->product_id }}" data-variant-id="{{ $log->variant_id }}" data-date="{{ $log->date instanceof \Carbon\Carbon ? $log->date->format('Y-m-d') : \Carbon\Carbon::parse($log->date)->format('Y-m-d') }}" data-reason="{{ $log->reason }}">
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            {{ $log->date->format('Y-m-d H:i') }}
+                                            {{ $log->date instanceof \Carbon\Carbon ? $log->date->format('Y-m-d H:i') : \Carbon\Carbon::parse($log->date)->format('Y-m-d H:i') }}
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap">
                                             <div class="text-sm font-medium text-gray-900">{{ $log->product->name }}</div>
@@ -116,7 +116,7 @@
         </div>
     </div>
 
-    @push('scripts')
+    @push('js')
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Search functionality

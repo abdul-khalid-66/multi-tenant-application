@@ -121,27 +121,11 @@
         </div>
     </div>
 
-    @push('scripts')
+    @push('js')
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            $productsJson = $products->map(function($product) {
-                return [
-                    'id' => $product->id,
-                    'name' => $product->name,
-                    'price' => $product->price_sale,
-                    'cost' => $product->price_cost,
-                    'variants' => $product->variants->map(function($variant) {
-                        return [
-                            'id' => $variant->id,
-                            'name' => $variant->name,
-                            'price' => $variant->price_sale,
-                            'cost' => $variant->price_cost,
-                            'stock' => $variant->stock_quantity
-                        ];
-                    })->toArray()
-                ];
-            })->toArray();
-
+       document.addEventListener('DOMContentLoaded', function() {
+            // Define products as a JavaScript variable by directly embedding the JSON object
+            const products = @json($products);
 
             // Add item button functionality
             let itemCount = 0;

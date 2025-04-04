@@ -80,12 +80,21 @@
                                             <div class="text-sm text-gray-900">{{ $product->category->category_name }}</div>
                                             <div class="text-sm text-gray-500">{{ $product->category->subcategory }}</div>
                                         </td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            @foreach($product->variants as $variant)
-                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mb-1 mr-1">
-                                                    {{ $variant->name }} ({{ $variant->stock_quantity }})
-                                                </span>
-                                            @endforeach
+
+                                        <td class="px-6 py-4">
+                                            <div class="flex flex-wrap gap-1.5 max-w-[200px]">
+                                                @foreach($product->variants as $variant)
+                                                <div class="relative group">
+                                                    <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-blue-50 text-blue-800 border border-blue-100 hover:bg-blue-100 transition-colors">
+                                                        {{ $variant->name }} ({{ $variant->stock_quantity }})
+                                                    </span>
+                                                    <div class="absolute z-10 hidden group-hover:block bg-white p-2 rounded-md shadow-lg border border-gray-200 text-xs mt-1">
+                                                        <div class="whitespace-nowrap">SKU: {{ $variant->sku ?? 'N/A' }}</div>
+                                                        <div class="whitespace-nowrap">Price: ${{ number_format($variant->price_sale, 2) }}</div>
+                                                    </div>
+                                                </div>
+                                                @endforeach
+                                            </div>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap">
                                             @if($product->status == 'available')

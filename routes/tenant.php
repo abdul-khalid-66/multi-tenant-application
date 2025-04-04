@@ -12,7 +12,13 @@ use App\Http\Controllers\App\{
     CustomerController,
     InvestmentController,
     SaleController,
+    ExpenseController,
+    CashInHandController,
+    ProfitLossController,
+    BackendController,
+    InventoryLogController,
 };
+
 use Illuminate\Support\Facades\Route;
 use Stancl\Tenancy\Middleware\InitializeTenancyByDomain;
 use Stancl\Tenancy\Middleware\PreventAccessFromCentralDomains;
@@ -39,37 +45,55 @@ Route::middleware([
         return view('app.welcome');
     });
 
-    Route::get('/dashboard', function () {
-        return view('app.dashboard');
-    })->middleware(['auth', 'verified'])->name('dashboard');
+
+    Route::get('dashboard', [BackendController::class, 'dashboard'])->middleware(['auth', 'verified'])->name('dashboard');
 
     Route::middleware('auth')->group(function () {
+
         Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
         Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
         Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
         Route::group(['middleware' => ['role:admin']], function () {
+
             Route::resource('users', UserController::class);
-
             Route::resource('products', ProductController::class);
-
             Route::resource('categories', CategoryController::class);
+            Route::resource('product-variants', ProductVariantController::class);
+            Route::resource('suppliers', SupplierController::class);
+            Route::resource('customers', CustomerController::class);
+            Route::resource('investments', InvestmentController::class);
+            Route::resource('sales', SaleController::class);
 
+            Route::get('sales/invoice/{invoice_no}', [SaleController::class, 'showByInvoice'])->name('sales.invoice');
+            // Expenses - Full resource
+            Route::resource('expenses', ExpenseController::class)->except(['create', 'edit']);
 
-            // Standard resource routes
+            // Cash Flow Dashboard
+            Route::prefix('cash')->group(function () {
+                Route::get('in-hand', [CashInHandController::class, 'index'])->name('cash.index');
+                Route::get('balance', [CashInHandController::class, 'balance'])->name('cash.balance');
+            });
+
+            // Reports
+            Route::prefix('reports')->name('reports.')->group(function () {
+                // Profit/Loss
+                Route::get('profit-loss', [ProfitLossController::class, 'index'])->name('profit-loss');
+                Route::get('profit-loss/{profitLoss}', [ProfitLossController::class, 'show'])->name('profit-loss.show');
+                Route::get('profit-loss-summary', [ProfitLossController::class, 'summary'])->name('profit-loss.summary');
+
+                // Add other report types here if needed
+                // Route::get('expenses', [ExpenseReportController::class, 'index'])->name('expenses');
+            });
+
+            // Product Variants Routes
             Route::resource('product-variants', ProductVariantController::class);
 
+            // Inventory Logs Routes
+            Route::get('inventory-logs', [InventoryLogController::class, 'index'])
+                ->name('inventory-logs.index');
 
-            Route::resource('suppliers', SupplierController::class);
-
-
-            Route::resource('customers', CustomerController::class);
-
-
-            Route::resource('investments', InvestmentController::class);
-
-            Route::resource('sales', SaleController::class);
-            Route::get('sales/invoice/{invoice_no}', [SaleController::class, 'showByInvoice'])->name('sales.invoice');
+            // Route::get('inventory-logs', InventoryLogController::class)->name('inventory-logs.index');
         });
     });
 

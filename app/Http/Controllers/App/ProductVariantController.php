@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\App;
 
 use App\Http\Controllers\Controller;
+use App\Models\Product;
 use App\Models\ProductVariant;
 use Illuminate\Http\Request;
 
@@ -13,7 +14,11 @@ class ProductVariantController extends Controller
      */
     public function index()
     {
-        //
+        $variants = ProductVariant::with('product')
+            ->latest()
+            ->paginate(10);
+
+        return view('app.product.product_variants.index  ', compact('variants'));
     }
 
     /**
@@ -21,7 +26,8 @@ class ProductVariantController extends Controller
      */
     public function create()
     {
-        //
+        $products = Product::all();
+        return view('app.product.product_variants.create', compact('products'));
     }
 
     /**
@@ -29,7 +35,20 @@ class ProductVariantController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $validated = $request->validate([
+            'product_id' => 'required|exists:products,id',
+            'name' => 'required|string|max:100',
+            'sku' => 'required|string|max:100|unique:product_variants',
+            'price_sale' => 'required|numeric|min:0',
+            'price_cost' => 'required|numeric|min:0',
+            'status' => 'required|string|max:20',
+            'stock_quantity' => 'required|integer|min:0',
+            'weight' => 'nullable|numeric|min:0',
+        ]);
+
+        ProductVariant::create($validated);
+
+        return redirect()->route('product-variants.index')->with('success', 'Variant created successfully.');
     }
 
     /**
@@ -45,7 +64,8 @@ class ProductVariantController extends Controller
      */
     public function edit(ProductVariant $productVariant)
     {
-        //
+        $products = Product::all();
+        return view('app.product.product_variants.edit', compact('productVariant', 'products'));
     }
 
     /**
@@ -53,14 +73,29 @@ class ProductVariantController extends Controller
      */
     public function update(Request $request, ProductVariant $productVariant)
     {
-        //
+        $validated = $request->validate([
+            'product_id' => 'required|exists:products,id',
+            'name' => 'required|string|max:100',
+            'sku' => 'required|string|max:100|unique:product_variants,sku,' . $productVariant->id,
+            'price_sale' => 'required|numeric|min:0',
+            'price_cost' => 'required|numeric|min:0',
+            'status' => 'required|string|max:20',
+            'stock_quantity' => 'required|integer|min:0',
+            'weight' => 'nullable|numeric|min:0',
+        ]);
+
+        $productVariant->update($validated);
+
+        return redirect()->route('product-variants.index')->with('success', 'Variant updated successfully.');
     }
+
 
     /**
      * Remove the specified resource from storage.
      */
     public function destroy(ProductVariant $productVariant)
     {
-        //
+        $productVariant->delete();
+        return redirect()->route('product-variants.index')->with('success', 'Variant deleted successfully.');
     }
 }

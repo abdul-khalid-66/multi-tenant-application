@@ -13,7 +13,8 @@ class CategoryController extends Controller
      */
     public function index()
     {
-        //
+        $categories = Category::latest()->paginate(10);
+        return view('app.product.category.index', compact('categories'));
     }
 
     /**
@@ -21,7 +22,9 @@ class CategoryController extends Controller
      */
     public function create()
     {
-        //
+
+        $mainCategories = Category::whereNull('subcategory')->get();
+        return view('app.product.category.create', compact('mainCategories'));
     }
 
     /**
@@ -29,7 +32,20 @@ class CategoryController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $request->validate([
+            'category_name' => 'required|string|max:100',
+            'is_subcategory' => 'nullable',
+            'parent_category' => 'nullable|exists:categories,id'
+        ]);
+
+        $isSubcategory = $request->has('is_subcategory'); // Check if checkbox was checked
+
+        Category::create([
+            'category_name' => $request->category_name,
+            'subcategory' => $isSubcategory ? Category::find($request->parent_category)->category_name : null
+        ]);
+
+        return redirect()->route('categories.index')->with('success', 'Category created');
     }
 
     /**
@@ -37,7 +53,7 @@ class CategoryController extends Controller
      */
     public function show(Category $category)
     {
-        //
+        // return view('categories.edit', compact('category'));
     }
 
     /**
@@ -45,7 +61,8 @@ class CategoryController extends Controller
      */
     public function edit(Category $category)
     {
-        //
+        $parentCategories = Category::whereNull('subcategory')->where('id', '!=', $category->id)->get();
+        return view('app.product.category.edit', compact('category', 'parentCategories'));
     }
 
     /**
@@ -53,7 +70,15 @@ class CategoryController extends Controller
      */
     public function update(Request $request, Category $category)
     {
-        //
+        $request->validate([
+            'category_name' => 'required|string|max:100',
+            'subcategory' => 'nullable|string|max:100'
+        ]);
+
+        $category->update($request->all());
+
+        return redirect()->route('categories.index')
+            ->with('success', 'Category updated successfully.');
     }
 
     /**
@@ -61,6 +86,8 @@ class CategoryController extends Controller
      */
     public function destroy(Category $category)
     {
-        //
+        $category->delete();
+        return redirect()->route('categories.index')
+            ->with('success', 'Category deleted successfully.');
     }
 }

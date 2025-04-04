@@ -150,7 +150,7 @@
     </div>
     
     <div class="sidebar-group-title">Products</div>
-    <a href="{{ route('products.index') }}" class="sidebar-item active">
+    <a href="{{ route('products.index') }}" class="sidebar-item {{ request()->routeIs('products.index') ? 'active' : '' }}">
         <span class="icon">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                 <path fill-rule="evenodd" d="M10 2a4 4 0 00-4 4v1H5a1 1 0 00-.994.89l-1 9A1 1 0 004 18h12a1 1 0 00.994-1.11l-1-9A1 1 0 0015 7h-1V6a4 4 0 00-4-4zm2 5V6a2 2 0 10-4 0v1h4zm-6 3a1 1 0 112 0 1 1 0 01-2 0zm7-1a1 1 0 100 2 1 1 0 000-2z" clip-rule="evenodd" />
@@ -159,8 +159,7 @@
         <span class="text">All Products</span>
     </a>
     
-    <!-- Add Product - Using "plus" icon -->
-    <a href="{{ route('products.create') }}" class="sidebar-item">
+    <a href="{{ route('products.create') }}" class="sidebar-item {{ request()->routeIs('products.create') ? 'active' : '' }}">
         <span class="icon">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                 <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
@@ -170,7 +169,7 @@
     </a>
 
     <!-- Product Categories - Using "collection" icon -->
-    <a href="{{ route('categories.index') }}" class="sidebar-item">
+    <a href="{{ route('categories.index') }}" class="sidebar-item {{ request()->routeIs('categories.index') ? 'active' : '' }}">
         <span class="icon">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                 <path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z" />
@@ -180,7 +179,7 @@
     </a>
 
     <!-- Product Variants - Using "color-swatch" icon -->
-    <a href="{{ route('product-variants.index') }}" class="sidebar-item">
+    <a href="{{ route('product-variants.index') }}" class="sidebar-item {{ request()->routeIs('product-variants.index') ? 'active' : '' }}">
         <span class="icon">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                 <path fill-rule="evenodd" d="M4 2a2 2 0 00-2 2v11a3 3 0 106 0V4a2 2 0 00-2-2H4zm1 14a1 1 0 100-2 1 1 0 000 2zm5-1.757l4.9-4.9a2 2 0 000-2.828L13.485 5.1a2 2 0 00-2.828 0L10 5.757v8.486zM16 18H9.071l6-6H16a2 2 0 012 2v2a2 2 0 01-2 2z" clip-rule="evenodd" />
@@ -190,7 +189,7 @@
     </a>
 
     <!-- Inventory Logs - Using "clipboard-list" icon -->
-    <a href="{{ route('inventory-logs.index') }}" class="sidebar-item">
+    <a href="{{ route('inventory-logs.index') }}" class="sidebar-item  {{ request()->routeIs('inventory-logs.index') ? 'active' : '' }}">
         <span class="icon">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                 <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />

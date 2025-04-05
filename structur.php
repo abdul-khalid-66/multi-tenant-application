@@ -360,3 +360,310 @@ System Settings
 Backup/Restore
 
 Activity Logs
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- Complete Business Activity Calculations Based on Your Database
+Based on your database structure, here's how to calculate all key business metrics:
+
+1. Financial Overview Calculations
+Gross Revenue
+sql
+Copy
+SELECT SUM(total_amount) AS gross_revenue 
+FROM sales 
+WHERE payment_status != 'pending' 
+AND deleted_at IS NULL;
+Net Revenue (After Returns)
+sql
+Copy
+SELECT 
+    (SELECT SUM(total_amount) FROM sales WHERE deleted_at IS NULL) - 
+    (SELECT COALESCE(SUM(total_refund_amount), 0) FROM returns WHERE deleted_at IS NULL) 
+AS net_revenue;
+Cost of Goods Sold (COGS)
+sql
+Copy
+SELECT SUM(sd.quantity * pv.price_cost) AS cogs
+FROM sale_details sd
+JOIN product_variants pv ON sd.variant_id = pv.id
+JOIN sales s ON sd.sale_id = s.id
+WHERE s.deleted_at IS NULL;
+Gross Profit
+sql
+Copy
+SELECT 
+    (SELECT SUM(total_amount) FROM sales WHERE deleted_at IS NULL) - 
+    (SELECT SUM(sd.quantity * pv.price_cost) 
+     FROM sale_details sd 
+     JOIN product_variants pv ON sd.variant_id = pv.id
+     JOIN sales s ON sd.sale_id = s.id
+     WHERE s.deleted_at IS NULL)
+AS gross_profit;
+2. Payment Status Breakdown
+Paid Amounts
+sql
+Copy
+SELECT SUM(total_amount) AS paid_amount
+FROM sales
+WHERE payment_status = 'paid'
+AND deleted_at IS NULL;
+Partial Payments
+sql
+Copy
+SELECT 
+    SUM(total_amount) AS partial_invoiced,
+    (SELECT SUM(amount) FROM payments WHERE deleted_at IS NULL) AS partial_received,
+    SUM(total_amount) - (SELECT SUM(amount) FROM payments WHERE deleted_at IS NULL) AS partial_outstanding
+FROM sales
+WHERE payment_status = 'partial'
+AND deleted_at IS NULL;
+Pending Payments
+sql
+Copy
+SELECT SUM(total_amount) AS pending_amount
+FROM sales
+WHERE payment_status = 'pending'
+AND deleted_at IS NULL;
+3. Inventory Valuation
+Current Inventory Value
+sql
+Copy
+SELECT SUM(stock_quantity * price_cost) AS inventory_value
+FROM product_variants
+WHERE deleted_at IS NULL;
+Inventory Turnover Ratio
+sql
+Copy
+SELECT 
+    (SELECT SUM(sd.quantity * pv.price_cost) 
+     FROM sale_details sd 
+     JOIN product_variants pv ON sd.variant_id = pv.id
+     JOIN sales s ON sd.sale_id = s.id
+     WHERE s.deleted_at IS NULL) / 
+    NULLIF((SELECT AVG(stock_quantity * price_cost) 
+           FROM product_variants 
+           WHERE deleted_at IS NULL), 0)
+AS inventory_turnover;
+4. Cash Flow Analysis
+Cash In Hand
+sql
+Copy
+SELECT SUM(amount) AS cash_in_hand
+FROM cash_in_hand_details
+WHERE deleted_at IS NULL;
+Cash Flow Breakdown
+sql
+Copy
+SELECT 
+    transaction_type,
+    SUM(CASE WHEN amount > 0 THEN amount ELSE 0 END) AS cash_in,
+    SUM(CASE WHEN amount < 0 THEN amount ELSE 0 END) AS cash_out,
+    SUM(amount) AS net_cash_flow
+FROM cash_in_hand_details
+WHERE deleted_at IS NULL
+GROUP BY transaction_type;
+5. Profit & Loss Statement
+Net Profit/Loss
+sql
+Copy
+SELECT 
+    (SELECT SUM(profit) FROM profit_losses WHERE deleted_at IS NULL) AS total_profit,
+    (SELECT SUM(loss) FROM profit_losses WHERE deleted_at IS NULL) AS total_loss,
+    (SELECT SUM(profit) - SUM(loss) FROM profit_losses WHERE deleted_at IS NULL) AS net_profit
+FROM profit_losses
+LIMIT 1;
+Profit/Loss by Category
+sql
+Copy
+SELECT 
+    category,
+    SUM(profit) AS profit,
+    SUM(loss) AS loss,
+    SUM(profit) - SUM(loss) AS net
+FROM profit_losses
+WHERE deleted_at IS NULL
+GROUP BY category;
+6. Discounts & Taxes
+Total Discounts Given
+sql
+Copy
+SELECT SUM(discount) AS total_discounts
+FROM sales
+WHERE deleted_at IS NULL;
+Total Taxes Collected
+sql
+Copy
+SELECT SUM(tax) AS total_taxes
+FROM sales
+WHERE deleted_at IS NULL;
+7. Investment Analysis
+Total Investments
+sql
+Copy
+SELECT SUM(amount) AS total_investment
+FROM investments
+WHERE deleted_at IS NULL;
+Investment vs Profit
+sql
+Copy
+SELECT 
+    (SELECT SUM(amount) FROM investments WHERE deleted_at IS NULL) AS total_investment,
+    (SELECT SUM(profit) - SUM(loss) FROM profit_losses WHERE deleted_at IS NULL) AS net_profit,
+    ((SELECT SUM(profit) - SUM(loss) FROM profit_losses WHERE deleted_at IS NULL) / 
+    NULLIF((SELECT SUM(amount) FROM investments WHERE deleted_at IS NULL), 0) * 100 
+    AS roi_percentage;
+8. Customer Analysis
+Top Customers by Spending
+sql
+Copy
+SELECT 
+    c.name,
+    c.contact,
+    SUM(s.total_amount) AS total_spent,
+    COUNT(s.id) AS transaction_count
+FROM sales s
+JOIN customers c ON s.customer_id = c.id
+WHERE s.deleted_at IS NULL
+GROUP BY c.id, c.name, c.contact
+ORDER BY total_spent DESC
+LIMIT 10;
+9. Product Performance
+Top Selling Products
+sql
+Copy
+SELECT 
+    p.name,
+    pv.name AS variant,
+    SUM(sd.quantity) AS total_quantity,
+    SUM(sd.total_price) AS total_revenue,
+    SUM(sd.quantity * pv.price_cost) AS total_cost,
+    SUM(sd.total_price) - SUM(sd.quantity * pv.price_cost) AS total_profit
+FROM sale_details sd
+JOIN products p ON sd.product_id = p.id
+JOIN product_variants pv ON sd.variant_id = pv.id
+JOIN sales s ON sd.sale_id = s.id
+WHERE s.deleted_at IS NULL
+GROUP BY p.id, p.name, pv.id, pv.name
+ORDER BY total_revenue DESC
+LIMIT 10;
+10. Return Analysis
+Return Rate by Product
+sql
+Copy
+SELECT 
+    p.name,
+    pv.name AS variant,
+    SUM(rd.quantity_returned) AS total_returned,
+    SUM(sd.quantity) AS total_sold,
+    (SUM(rd.quantity_returned) / NULLIF(SUM(sd.quantity), 0)) * 100 AS return_rate
+FROM return_details rd
+JOIN sale_details sd ON rd.product_id = sd.product_id AND rd.variant_id = sd.variant_id
+JOIN products p ON rd.product_id = p.id
+JOIN product_variants pv ON rd.variant_id = pv.id
+WHERE rd.deleted_at IS NULL
+GROUP BY p.id, p.name, pv.id, pv.name
+ORDER BY return_rate DESC;
+Implementation Recommendations
+Create a Dashboard View that shows all these metrics in real-time
+
+Schedule Daily Reports for key metrics like cash position and sales
+
+Set Up Alerts for:
+
+Low inventory levels (below reorder_level)
+
+High-value pending payments
+
+Negative cash flow situations
+
+Implement Trend Analysis by comparing periods (week-over-week, month-over-month)
+
+Sample PHP/Laravel Implementation
+For your Laravel application, you could create a BusinessMetricsService class:
+
+php
+Copy
+<?php
+
+namespace App\Services;
+
+use App\Models\Sale;
+use App\Models\Return;
+use App\Models\ProductVariant;
+use App\Models\CashInHandDetail;
+use App\Models\ProfitLoss;
+use App\Models\Investment;
+
+class BusinessMetricsService
+{
+    public function getGrossRevenue()
+    {
+        return Sale::whereNotNull('payment_status')
+                 ->where('payment_status', '!=', 'pending')
+                 ->sum('total_amount');
+    }
+
+    public function getNetRevenue()
+    {
+        $grossSales = Sale::sum('total_amount');
+        $returns = Return::sum('total_refund_amount');
+        
+        return $grossSales - $returns;
+    }
+
+    public function getInventoryValue()
+    {
+        return ProductVariant::sum(\DB::raw('stock_quantity * price_cost'));
+    }
+
+    public function getCashPosition()
+    {
+        return CashInHandDetail::sum('amount');
+    }
+
+    public function getProfitLossStatement()
+    {
+        return [
+            'gross_profit' => $this->getGrossProfit(),
+            'expenses' => $this->getTotalExpenses(),
+            'net_profit' => $this->getNetProfit(),
+            'roi' => $this->getROI()
+        ];
+    }
+
+    // Add all other calculation methods here...
+}
+Then use it in your controller:
+
+php
+Copy
+public function dashboard()
+{
+    $metrics = new BusinessMetricsService();
+    
+    return view('dashboard', [
+        'grossRevenue' => $metrics->getGrossRevenue(),
+        'netRevenue' => $metrics->getNetRevenue(),
+        'inventoryValue' => $metrics->getInventoryValue(),
+        'cashPosition' => $metrics->getCashPosition(),
+        'profitLoss' => $metrics->getProfitLossStatement()
+    ]);
+}
+This comprehensive approach will give you complete visibility into all aspects of your business performance. Would you like me to elaborate on any specific calculation or visualization approach? -->

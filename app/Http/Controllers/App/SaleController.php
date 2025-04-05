@@ -196,4 +196,117 @@ class SaleController extends Controller
         return $pdf->download('invoice-'.$sale->invoice_no.'.pdf');
     
     }
+
+
+    // public function edit(Sale $sale)
+    // {
+    //     $sale->load(['customer', 'saleDetails.product', 'saleDetails.variant']);
+        
+    //     return view('app.sales.edit', [
+    //         'sale' => $sale,
+    //         'customers' => Customer::all(),
+    //         'products' => Product::with('variants')->get()
+    //     ]);
+    // }
+
+    // public function update(Request $request, $id)
+    // {
+    //     DB::beginTransaction();
+
+    //     try {
+    //         // Validate the request data (you can reuse the same validation logic as store)
+    //         $validated = $request->validate([
+    //             'customer_id' => 'required|exists:customers,id',
+    //             'date' => 'required|date',
+    //             'payment_status' => 'required|in:paid,pending,partial',
+    //             'payment_method' => 'required|in:cash,credit_card,debit_card,transfer',
+    //             'discount' => 'nullable|numeric|min:0',
+    //             'tax' => 'nullable|numeric|min:0',
+    //             'notes' => 'nullable|string',
+    //             'items' => 'required|array|min:1',
+    //             'items.*.product_id' => 'required|exists:products,id',
+    //             'items.*.variant_id' => 'nullable|exists:product_variants,id',
+    //             'items.*.quantity' => 'required|integer|min:1',
+    //             'items.*.sell_price' => 'required|numeric|min:0',
+    //             'items.*.unit' => 'nullable|string',
+    //             'items.*.note' => 'nullable|string'
+    //         ]);
+
+    //         // Find the sale to update
+    //         $sale = Sale::findOrFail($id); // Find the sale or fail if not found
+
+    //         // Calculate totals again based on updated data
+    //         $totalAmount = 0;
+    //         $totalCost = 0;
+    //         $items = [];
+
+    //         foreach ($validated['items'] as $item) {
+    //             $product = Product::find($item['product_id']);
+    //             $variant = $item['variant_id'] ? ProductVariant::find($item['variant_id']) : null;
+
+    //             $subtotal = $item['quantity'] * $item['sell_price'];
+    //             $cost = $item['quantity'] * ($variant ? $variant->price_cost : $product->cost_price);
+
+    //             $totalAmount += $subtotal;
+    //             $totalCost += $cost;
+
+    //             $items[] = [
+    //                 'product_id' => $item['product_id'],
+    //                 'variant_id' => $item['variant_id'],
+    //                 'quantity' => $item['quantity'],
+    //                 'cost_price' => $variant ? $variant->price_cost : $product->cost_price,
+    //                 'sell_price' => $item['sell_price'],
+    //                 'unit' => $item['unit'] ?? 'pcs',
+    //                 'line_item_note' => $item['note'] ?? null,
+    //                 'total_price' => $subtotal
+    //             ];
+    //         }
+
+    //         // Apply discount and tax
+    //         $discountAmount = $validated['discount'] ?? 0;
+    //         $taxAmount = $validated['tax'] ?? 0;
+    //         $totalAmount = $totalAmount - $discountAmount + $taxAmount;
+
+    //         // Update the sale record
+    //         $sale->update([
+    //             'total_amount' => $totalAmount,
+    //             'cost_price' => $totalCost,
+    //             'date' => $validated['date'],
+    //             'customer_id' => $validated['customer_id'],
+    //             'payment_status' => $validated['payment_status'],
+    //             'payment_method' => $validated['payment_method'],
+    //             'discount' => $discountAmount,
+    //             'tax' => $taxAmount,
+    //             'notes' => $validated['notes'] ?? null,
+    //         ]);
+
+    //         // Delete existing saleDetails before adding new ones
+    //         $sale->saleDetails()->delete(); 
+
+    //         // Add new sale details (items)
+    //         foreach ($items as $item) {
+    //             $sale->saleDetails()->create($item);
+
+    //             // Update stock if variant exists
+    //             if ($item['variant_id']) {
+    //                 $variant = ProductVariant::find($item['variant_id']);
+    //                 $variant->decrement('stock_quantity', $item['quantity']);
+    //             } else {
+    //                 // Update product stock if no variants
+    //                 $product = Product::find($item['product_id']);
+    //                 // You might want to decrement stock at the product level
+    //                 // depending on your business logic
+    //             }
+    //         }
+
+    //         DB::commit();
+
+    //         return redirect()->route('sales.index')
+    //             ->with('success', 'Sale updated successfully.');
+    //     } catch (\Exception $e) {
+    //         DB::rollBack();
+    //         return back()->with('error', 'Failed to update sale: ' . $e->getMessage());
+    //     }
+    // }
+
 }

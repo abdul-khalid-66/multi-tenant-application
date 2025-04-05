@@ -158,13 +158,54 @@
         </span>
         <span class="text">Sales Transactions</span>
     </a>
-    <a href="{{ route('sales.create') }}" class="sidebar-item">
+
+    {{-- {{ route('invoices.index') }} --}}
+    <a href="" class="sidebar-item {{ request()->routeIs('invoices.index') ? 'active' : '' }}">
         <span class="icon">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+                <path fill-rule="evenodd" d="M5 2a2 2 0 00-2 2v14l3.5-2 3.5 2 3.5-2 3.5 2V4a2 2 0 00-2-2H5zm2.5 3a1.5 1.5 0 100 3 1.5 1.5 0 000-3zm6.207.293a1 1 0 00-1.414 0l-6 6a1 1 0 101.414 1.414l6-6a1 1 0 000-1.414zM12.5 10a1.5 1.5 0 100 3 1.5 1.5 0 000-3z" clip-rule="evenodd" />
             </svg>
         </span>
-        <span class="text">Add Product</span>
+        <span class="text">Invoices</span>
+    </a>
+
+    {{-- {{ route('customers.index') }} --}}
+    <a href="" class="sidebar-item {{ request()->routeIs('customers.index') ? 'active' : '' }}">
+        <span class="icon">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v1h8v-1zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-1a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v1h-3zM4.75 12.094A5.973 5.973 0 004 15v1H1v-1a3 3 0 013.75-2.906z" />
+            </svg>
+        </span>
+        <span class="text">Customers</span>
+    </a>
+
+    {{-- {{ route('returns.index') }} --}}
+    <a href="" class="sidebar-item {{ request()->routeIs('returns.index') ? 'active' : '' }}">
+        <span class="icon">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M7.707 3.293a1 1 0 010 1.414L5.414 7H11a7 7 0 017 7v2a1 1 0 11-2 0v-2a5 5 0 00-5-5H5.414l2.293 2.293a1 1 0 11-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+            </svg>
+        </span>
+        <span class="text">Returns/Refunds</span>
+    </a>
+
+    {{-- {{ route('discounts.index') }} --}}
+    <a href="" class="sidebar-item {{ request()->routeIs('discounts.index') ? 'active' : '' }}">
+        <span class="icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-percent-icon lucide-percent"><line x1="19" x2="5" y1="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>
+        </span>
+        <span class="text">Discounts</span>
+    </a>
+
+    {{-- {{ route('inventory-control.index') }} --}}
+    <a href="" class="sidebar-item {{ request()->routeIs('inventory-control.index') ? 'active' : '' }}">
+        <span class="icon">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
+                <path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd" />
+            </svg>
+        </span>
+        <span class="text">Inventory Control</span>
     </a>
     
 </div>

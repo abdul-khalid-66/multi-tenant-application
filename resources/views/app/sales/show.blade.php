@@ -8,14 +8,38 @@
                     <div class="p-6 text-gray-900">
                         <div class="flex justify-between items-center mb-6">
                             <h2 class="text-2xl font-bold">Sale Invoice #{{ $sale->invoice_no }}</h2>
-                            <div class="flex space-x-2">
-                                <a href="{{ route('sales.index') }}" class="btn btn-secondary">
-                                    Back to Sales
+
+
+                            <div class="flex space-x-3">
+                                <!-- Print Button (opens in new tab) -->
+                                <a href="{{ route('sales.print', $sale->id) }}" 
+                                   class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+                                   target="_blank">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M5 4v3H4a2 2 0 00-2 2v3a2 2 0 002 2h1v2a2 2 0 002 2h6a2 2 0 002-2v-2h1a2 2 0 002-2V9a2 2 0 00-2-2h-1V4a2 2 0 00-2-2H7a2 2 0 00-2 2zm8 0H7v3h6V4zm0 8H7v4h6v-4z" clip-rule="evenodd" />
+                                    </svg>
+                                    Print
                                 </a>
-                                <button onclick="window.print()" class="btn btn-primary">
-                                    Print Invoice
-                                </button>
+                                
+                                <!-- Download PDF Button -->
+                                <a href="{{ route('sales.invoice.pdf', $sale->id) }}" 
+                                   class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                    </svg>
+                                    Download PDF
+                                </a>
+                                
+                                <!-- Back Button -->
+                                <a href="{{ route('sales.index') }}" 
+                                   class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    Back
+                                </a>
                             </div>
+                            
                         </div>
 
                         <!-- Invoice Header -->

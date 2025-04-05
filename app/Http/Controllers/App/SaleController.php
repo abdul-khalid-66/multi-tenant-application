@@ -11,6 +11,7 @@ use App\Models\SaleDetail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class SaleController extends Controller
 {
@@ -160,5 +161,39 @@ class SaleController extends Controller
             DB::rollBack();
             return back()->with('error', 'Failed to delete sale: ' . $e->getMessage());
         }
+    }
+
+    public function printInvoice(Sale $sale)
+    {
+        $data = [
+            'sale' => $sale->load(['customer', 'saleDetails.product', 'saleDetails.variant']),
+            'company' => [
+                'name' => config('app.name'), 
+                'address' => '123 Business Street, City, State 10001',
+                'phone' => '(123) 456-7890',
+                'email' => 'info@yourbusiness.com',
+                'logo' => asset('images/product.png') // Use asset() for web path
+            ]
+        ];
+    
+        return view('app.sales.sale_invoice_print', $data);
+    }
+
+    public function generateInvoicePDF(Sale $sale)
+    {
+        $data = [
+            'sale' => $sale,
+            'company' => [
+                'name' => 'Your Business Name',
+                'address' => '123 Business Street, City, State 10001',
+                'phone' => '(123) 456-7890',
+                'email' => 'info@yourbusiness.com'
+            ]
+        ];
+        
+        $pdf = PDF::loadView('app.sales.sale_invoice_pdf', $data);
+        
+        return $pdf->download('invoice-'.$sale->invoice_no.'.pdf');
+    
     }
 }

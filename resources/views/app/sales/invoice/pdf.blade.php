@@ -21,6 +21,6 @@
 </head>
 <body>
     <!-- Same content as print.blade.php -->
-    @include('tenant.invoices.print')
+    @include('app.sales.sale_invoice_pdf')
 </body>
 </html>

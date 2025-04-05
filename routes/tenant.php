@@ -95,6 +95,12 @@ Route::middleware([
                 ->name('inventory-logs.index');
 
 
+            Route::get('/sales/{sale}/print', [SaleController::class, 'printInvoice'])
+            ->name('sales.print');
+        
+            Route::get('/sales/{sale}/invoice-pdf', [SaleController::class, 'generateInvoicePDF'])
+            ->name('sales.invoice.pdf');
+
 
             Route::prefix('invoices')->group(function () {
                 Route::get('/', [InvoiceController::class, 'index'])->name('invoices.index');

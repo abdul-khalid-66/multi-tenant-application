@@ -49,11 +49,11 @@
                                             </span>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                            <a href="{{ route('tenant.invoices.show', $invoice->id) }}" 
+                                            <a href="{{ route('invoices.show', $invoice->id) }}" 
                                                class="text-blue-600 hover:text-blue-900 mr-3">View</a>
-                                            <a href="{{ route('tenant.invoices.print', $invoice->id) }}" 
+                                            <a href="{{ route('invoices.print', $invoice->id) }}" 
                                                class="text-gray-600 hover:text-gray-900 mr-3" target="_blank">Print</a>
-                                            <a href="{{ route('tenant.invoices.pdf', $invoice->id) }}" 
+                                            <a href="{{ route('invoices.pdf', $invoice->id) }}" 
                                                class="text-red-600 hover:text-red-900">PDF</a>
                                         </td>
                                     </tr>

@@ -7,7 +7,7 @@ use App\Models\Sale;
 use App\Models\SaleDetail;
 use App\Models\Customer;
 use Illuminate\Http\Request;
-use PDF;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class InvoiceController extends Controller
 {
@@ -27,19 +27,21 @@ class InvoiceController extends Controller
         $invoice = Sale::with(['customer', 'saleDetails.product', 'saleDetails.variant'])
             ->findOrFail($id);
 
-        return view('tenant.invoices.show', compact('invoice'));
+        return view('app.sales.invoice.show', compact('invoice'));
     }
 
     // Generate PDF for an invoice
+
     public function generatePdf($id)
     {
         $invoice = Sale::with(['customer', 'saleDetails.product', 'saleDetails.variant'])
             ->findOrFail($id);
 
-        $pdf = PDF::loadView('tenant.invoices.pdf', compact('invoice'));
+        $pdf = Pdf::loadView('app.sales.invoice.pdf', compact('invoice')); // <-- "Pdf" not "PDF"
 
         return $pdf->download('invoice-' . $invoice->invoice_no . '.pdf');
     }
+    
 
     // Print invoice view
     public function print($id)
@@ -47,7 +49,7 @@ class InvoiceController extends Controller
         $invoice = Sale::with(['customer', 'saleDetails.product', 'saleDetails.variant'])
             ->findOrFail($id);
 
-        return view('tenant.invoices.print', compact('invoice'));
+        return view('app.sales.invoice.print', compact('invoice'));
     }
 
     // Search invoices
@@ -62,6 +64,6 @@ class InvoiceController extends Controller
             })
             ->paginate(20);
 
-        return view('tenant.invoices.index', compact('invoices'));
+        return view('app.sales.invoice.index', compact('invoices'));
     }
 }

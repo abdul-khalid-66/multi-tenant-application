@@ -138,7 +138,7 @@
         </div>
     </div>
 
-    @push('scripts')
+    @push('js')
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Search and filter functionality

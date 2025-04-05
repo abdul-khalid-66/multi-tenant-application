@@ -39,7 +39,7 @@
                                         <label for="image" class="block text-sm font-medium text-gray-700">Product Image</label>
                                         <div class="mt-1 flex flex-col sm:flex-row items-start sm:items-center gap-4">
                                             <div class="flex-shrink-0">
-                                                <img id="imagePreview" class="h-24 w-24 rounded-md object-cover bg-gray-100" src="https://via.placeholder.com/150" alt="Product preview">
+                                                <img id="imagePreview" class="h-24 w-24 rounded-md object-cover bg-gray-100" src="{{ asset('images/product.png') }}" alt="Product preview" onerror="this.src='/images/product.png'">
                                             </div>
                                             <div class="flex-grow w-full">
                                                 <input 

@@ -68,9 +68,18 @@ class ProductController extends Controller
 
         // Handle image upload
         if ($request->hasFile('image')) {
-            $imagePath = $request->file('image')->store('products', 'public');
+            $tenantId = auth()->user()->tenant_id;
+            $filename = Str::uuid() . '.' . $request->image->extension();
+
+            $imagePath = $request->file('image')->storeAs(
+                "tenants/{$tenantId}/products",
+                $filename,
+                'public'
+            );
+
             $validated['image'] = $imagePath;
         }
+
 
         // Create the product
         $product = Product::create($validated);

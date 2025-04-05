@@ -92,8 +92,8 @@ class SaleDetailObserver
     protected function updateSaleTotal($sale): void
     {
         $sale->update([
-            'total_amount' => $sale->details->sum('total_price'),
-            'cost_price' => $sale->details->sum(function ($detail) {
+            'total_amount' => $sale->saleDetails->sum('total_price'),
+            'cost_price' => $sale->saleDetails->sum(function ($detail) {
                 return $detail->cost_price * $detail->quantity;
             })
         ]);

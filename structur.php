@@ -268,34 +268,6 @@ Tracks profit and loss details.
 
 ---
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
----
-
-
-
-
 ### **Key Notes:**
 1. **Soft Delete:** The `deleted_at` column is used for soft deletes, allowing you to retain historical data without
 permanently deleting records.
@@ -303,22 +275,9 @@ permanently deleting records.
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 Core Modules:
 
+We Done this all product management
 Products Management
 
 All Products
@@ -332,7 +291,7 @@ Product Variants
 Inventory Levels
 
 
-
+Now We work on salase management
 Sales Management
 
 Sales Transactions

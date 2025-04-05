@@ -56,12 +56,12 @@
 
                                 <!-- Discount & Tax -->
                                 <div>
-                                    <label for="discount" class="block text-sm font-medium text-gray-700">Discount ($)</label>
+                                    <label for="discount" class="block text-sm font-medium text-gray-700">Discount (Rs)</label>
                                     <input type="number" step="0.01" min="0" name="discount" id="discount" value="{{ old('discount', 0) }}" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
                                 </div>
 
                                 <div>
-                                    <label for="tax" class="block text-sm font-medium text-gray-700">Tax ($)</label>
+                                    <label for="tax" class="block text-sm font-medium text-gray-700">Tax (Rs)</label>
                                     <input type="number" step="0.01" min="0" name="tax" id="tax" value="{{ old('tax', 0) }}" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
                                 </div>
 
@@ -91,19 +91,19 @@
                                         <div class="md:col-start-3 space-y-2">
                                             <div class="flex justify-between">
                                                 <span class="font-medium">Subtotal:</span>
-                                                <span id="subtotal">$0.00</span>
+                                                <span id="subtotal">Rs 0.00</span>
                                             </div>
                                             <div class="flex justify-between">
                                                 <span class="font-medium">Discount:</span>
-                                                <span id="discountDisplay">$0.00</span>
+                                                <span id="discountDisplay">Rs 0.00</span>
                                             </div>
                                             <div class="flex justify-between">
                                                 <span class="font-medium">Tax:</span>
-                                                <span id="taxDisplay">$0.00</span>
+                                                <span id="taxDisplay">Rs 0.00</span>
                                             </div>
                                             <div class="flex justify-between text-lg font-bold border-t pt-2">
                                                 <span>Total:</span>
-                                                <span id="total">$0.00</span>
+                                                <span id="total">Rs 0.00</span>
                                             </div>
                                         </div>
                                     </div>
@@ -289,10 +289,10 @@
                 const total = subtotal - discount + tax;
 
                 // Update display
-                document.getElementById('subtotal').textContent = '$' + subtotal.toFixed(2);
-                document.getElementById('discountDisplay').textContent = '$' + discount.toFixed(2);
-                document.getElementById('taxDisplay').textContent = '$' + tax.toFixed(2);
-                document.getElementById('total').textContent = '$' + total.toFixed(2);
+                document.getElementById('subtotal').textContent = 'Rs' + subtotal.toFixed(2);
+                document.getElementById('discountDisplay').textContent = 'Rs' + discount.toFixed(2);
+                document.getElementById('taxDisplay').textContent = 'Rs' + tax.toFixed(2);
+                document.getElementById('total').textContent = 'Rs' + total.toFixed(2);
             }
 
             // Add event listeners for discount and tax

@@ -17,6 +17,7 @@ use App\Http\Controllers\App\{
     ProfitLossController,
     BackendController,
     InventoryLogController,
+    InvoiceController,
 };
 
 use Illuminate\Support\Facades\Route;
@@ -93,7 +94,15 @@ Route::middleware([
             Route::get('inventory-logs', [InventoryLogController::class, 'index'])
                 ->name('inventory-logs.index');
 
-            // Route::get('inventory-logs', InventoryLogController::class)->name('inventory-logs.index');
+
+
+            Route::prefix('invoices')->group(function () {
+                Route::get('/', [InvoiceController::class, 'index'])->name('invoices.index');
+                Route::get('/search', [InvoiceController::class, 'search'])->name('invoices.search');
+                Route::get('/{id}', [InvoiceController::class, 'show'])->name('invoices.show');
+                Route::get('/{id}/print', [InvoiceController::class, 'print'])->name('invoices.print');
+                Route::get('/{id}/pdf', [InvoiceController::class, 'generatePdf'])->name('invoices.pdf');
+            });
         });
     });
 

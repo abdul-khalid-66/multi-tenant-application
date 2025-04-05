@@ -16,7 +16,7 @@ class SaleController extends Controller
 {
     public function index()
     {
-        $sales = Sale::with(['customer', 'details'])
+        $sales = Sale::with(['customer', 'saleDetails'])
             ->latest()
             ->paginate(10);
 
@@ -34,7 +34,7 @@ class SaleController extends Controller
     public function store(Request $request)
     {
 
-       
+
         DB::beginTransaction();
 
         try {
@@ -106,9 +106,9 @@ class SaleController extends Controller
                 'variant_id' => $validated['items'][1]['variant_id'] ?? null // Add this if needed
             ]);
 
-            // Create sale details
+            // Create sale saleDetails
             foreach ($items as $item) {
-                $sale->details()->create($item);
+                $sale->saleDetails()->create($item);
 
                 // Update stock if variant exists
                 if ($item['variant_id']) {
@@ -134,7 +134,7 @@ class SaleController extends Controller
 
     public function show(Sale $sale)
     {
-        $sale->load(['customer', 'details.product', 'details.variant']);
+        $sale->load(['customer', 'saleDetails.product', 'saleDetails.variant']);
         return view('app.sales.show', compact('sale'));
     }
 
@@ -144,7 +144,7 @@ class SaleController extends Controller
 
         try {
             // Restore stock for each item
-            foreach ($sale->details as $detail) {
+            foreach ($sale->saleDetails as $detail) {
                 if ($detail->variant_id) {
                     $variant = ProductVariant::find($detail->variant_id);
                     $variant->increment('stock_quantity', $detail->quantity);

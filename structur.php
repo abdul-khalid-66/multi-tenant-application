@@ -279,87 +279,68 @@ permanently deleting records.
 
 Core Modules:
 
-We Done this all product management
 Products Management
-
-All Products
-
-Add New Product
-
-Product Categories
-
-Product Variants
-
-Inventory Levels
-
-
-Now We work on salase management
+    ✔️ All Products  
+    ✔️ Add New Product  
+    ✔️ Product Categories  
+    ✔️ Product Variants  
+    ✔️ Inventory Levels  
 Sales Management
+    ✔️ Sales Transactions  
+    ✔️ Invoices  
+    ✔️ Customers  
+    🔄 Returns/Refunds  
+        ↳ 📝 Return Requests Processing  
+        ↳ ✅ Refund Approval Workflow  
+        📊 Return Reason Analytics *(New)*  
+    � Discounts/Promotions  
+        ↳ 🎟️ Coupon Code Management *(New)*  
+        ↳ 🎁 Seasonal Offers Tracking *(New)*  
+    📦 Inventory Control  
+        ↳ ⚡ Automatic Stock Deduction *(New)*  
+        ↳ 🔴 Low Stock Warnings  
 
-Sales Transactions
-
-Invoices
-
-Customers
-
-Returns/Refunds
-
-Discounts/Promotions
-
-Inventory Control
-
-
-
-Stock Management
-
-Reorder Alerts
-
-Inventory Logs
-
-
+Stock Management 
+    🔔 Reorder Alerts  
+    ↳ 🧠 Smart Alerts *(New)*  
+    📝 Inventory Logs  
+    ↳ 🔍 Filter by Reason *(New)*  
+    ↳ ⏳ Stock Adjustment History *(New)*  
 
 Supplier Management
-
-Stock Transfers
-
-Financial Tracking
-
-Revenue Reports
-
-Profit/Loss Analysis
-
-Expenses Tracking
-
-Investments
-
-Cash Flow
+    🚚 Stock Transfers  
+    ↳ 📝 Purchase Order Generation *(New)*  
+    💳 Financial Tracking  
+    ↳ 📜 Supplier Payment History *(New)*  
+    ↳ ⚖️ Outstanding Balances *(New)*  
+    📈 Supplier Performance Dashboard *(New)*  
+    📊 Revenue Reports  
+    💹 Profit/Loss Analysis  
+    💸 Expenses Tracking  
+    💰 Investments  
+    💵 Cash Flow  
 
 Reporting & Analytics
-
-Sales Reports
-
-Inventory Reports
-
-Customer Reports
-
-Financial Reports
-
-Product Performance
-
-System Administration
-
-
-
+    📈 Sales Reports  
+    📦 Inventory Reports  
+    👥 Customer Reports  
+    💲 Financial Reports  
+    ⚙️ Operational Reports *(New)*  
+        ↳ ⏱️ Fulfillment Time Reports  
+        ↳ 🔄 Return Processing Efficiency  
+    🔮 Predictive Analytics *(New)*  
+        ↳ 📅 Demand Forecasting  
+        ↳ 🛒 Reorder Suggestions  
+    🏆 Product Performance  
+    ⚙️ System Administration  
 
 User Management
-
-Roles & Permissions
-
-System Settings
-
-Backup/Restore
-
-Activity Logs
+    🛡️ Roles & Permissions  
+    ⚙️ System Settings  
+    💾 Backup/Restore  
+    📜 Activity Logs  
+        ↳ 🔍 Financial Changes Audit Trail *(New)*  
+        ↳ 🚨 Sensitive Action Alerts *(New)*  
 
 
 
@@ -379,227 +360,155 @@ Activity Logs
 
 
 
-<!-- Complete Business Activity Calculations Based on Your Database
-Based on your database structure, here's how to calculate all key business metrics:
+<!-- Mukammal Business Hisaab Kitab - Database ke Hisab se
 
-1. Financial Overview Calculations
-Gross Revenue
-sql
-Copy
-SELECT SUM(total_amount) AS gross_revenue 
-FROM sales 
-WHERE payment_status != 'pending' 
-AND deleted_at IS NULL;
-Net Revenue (After Returns)
-sql
-Copy
-SELECT 
-    (SELECT SUM(total_amount) FROM sales WHERE deleted_at IS NULL) - 
-    (SELECT COALESCE(SUM(total_refund_amount), 0) FROM returns WHERE deleted_at IS NULL) 
-AS net_revenue;
-Cost of Goods Sold (COGS)
-sql
-Copy
-SELECT SUM(sd.quantity * pv.price_cost) AS cogs
-FROM sale_details sd
-JOIN product_variants pv ON sd.variant_id = pv.id
-JOIN sales s ON sd.sale_id = s.id
-WHERE s.deleted_at IS NULL;
-Gross Profit
-sql
-Copy
-SELECT 
-    (SELECT SUM(total_amount) FROM sales WHERE deleted_at IS NULL) - 
-    (SELECT SUM(sd.quantity * pv.price_cost) 
-     FROM sale_details sd 
-     JOIN product_variants pv ON sd.variant_id = pv.id
-     JOIN sales s ON sd.sale_id = s.id
-     WHERE s.deleted_at IS NULL)
-AS gross_profit;
-2. Payment Status Breakdown
-Paid Amounts
-sql
-Copy
-SELECT SUM(total_amount) AS paid_amount
-FROM sales
-WHERE payment_status = 'paid'
-AND deleted_at IS NULL;
-Partial Payments
-sql
-Copy
-SELECT 
-    SUM(total_amount) AS partial_invoiced,
-    (SELECT SUM(amount) FROM payments WHERE deleted_at IS NULL) AS partial_received,
-    SUM(total_amount) - (SELECT SUM(amount) FROM payments WHERE deleted_at IS NULL) AS partial_outstanding
-FROM sales
-WHERE payment_status = 'partial'
-AND deleted_at IS NULL;
-Pending Payments
-sql
-Copy
-SELECT SUM(total_amount) AS pending_amount
-FROM sales
-WHERE payment_status = 'pending'
-AND deleted_at IS NULL;
-3. Inventory Valuation
-Current Inventory Value
-sql
-Copy
-SELECT SUM(stock_quantity * price_cost) AS inventory_value
-FROM product_variants
-WHERE deleted_at IS NULL;
-Inventory Turnover Ratio
-sql
-Copy
-SELECT 
-    (SELECT SUM(sd.quantity * pv.price_cost) 
-     FROM sale_details sd 
-     JOIN product_variants pv ON sd.variant_id = pv.id
-     JOIN sales s ON sd.sale_id = s.id
-     WHERE s.deleted_at IS NULL) / 
-    NULLIF((SELECT AVG(stock_quantity * price_cost) 
-           FROM product_variants 
-           WHERE deleted_at IS NULL), 0)
-AS inventory_turnover;
-4. Cash Flow Analysis
-Cash In Hand
-sql
-Copy
-SELECT SUM(amount) AS cash_in_hand
-FROM cash_in_hand_details
-WHERE deleted_at IS NULL;
-Cash Flow Breakdown
-sql
-Copy
-SELECT 
-    transaction_type,
-    SUM(CASE WHEN amount > 0 THEN amount ELSE 0 END) AS cash_in,
-    SUM(CASE WHEN amount < 0 THEN amount ELSE 0 END) AS cash_out,
-    SUM(amount) AS net_cash_flow
-FROM cash_in_hand_details
-WHERE deleted_at IS NULL
-GROUP BY transaction_type;
-5. Profit & Loss Statement
-Net Profit/Loss
-sql
-Copy
-SELECT 
-    (SELECT SUM(profit) FROM profit_losses WHERE deleted_at IS NULL) AS total_profit,
-    (SELECT SUM(loss) FROM profit_losses WHERE deleted_at IS NULL) AS total_loss,
-    (SELECT SUM(profit) - SUM(loss) FROM profit_losses WHERE deleted_at IS NULL) AS net_profit
-FROM profit_losses
-LIMIT 1;
-Profit/Loss by Category
-sql
-Copy
-SELECT 
-    category,
-    SUM(profit) AS profit,
-    SUM(loss) AS loss,
-    SUM(profit) - SUM(loss) AS net
-FROM profit_losses
-WHERE deleted_at IS NULL
-GROUP BY category;
-6. Discounts & Taxes
-Total Discounts Given
-sql
-Copy
-SELECT SUM(discount) AS total_discounts
-FROM sales
-WHERE deleted_at IS NULL;
-Total Taxes Collected
-sql
-Copy
-SELECT SUM(tax) AS total_taxes
-FROM sales
-WHERE deleted_at IS NULL;
-7. Investment Analysis
-Total Investments
-sql
-Copy
-SELECT SUM(amount) AS total_investment
-FROM investments
-WHERE deleted_at IS NULL;
-Investment vs Profit
-sql
-Copy
-SELECT 
-    (SELECT SUM(amount) FROM investments WHERE deleted_at IS NULL) AS total_investment,
-    (SELECT SUM(profit) - SUM(loss) FROM profit_losses WHERE deleted_at IS NULL) AS net_profit,
-    ((SELECT SUM(profit) - SUM(loss) FROM profit_losses WHERE deleted_at IS NULL) / 
-    NULLIF((SELECT SUM(amount) FROM investments WHERE deleted_at IS NULL), 0) * 100 
-    AS roi_percentage;
-8. Customer Analysis
-Top Customers by Spending
-sql
-Copy
-SELECT 
-    c.name,
-    c.contact,
-    SUM(s.total_amount) AS total_spent,
-    COUNT(s.id) AS transaction_count
-FROM sales s
-JOIN customers c ON s.customer_id = c.id
-WHERE s.deleted_at IS NULL
-GROUP BY c.id, c.name, c.contact
-ORDER BY total_spent DESC
-LIMIT 10;
-9. Product Performance
-Top Selling Products
-sql
-Copy
-SELECT 
-    p.name,
-    pv.name AS variant,
-    SUM(sd.quantity) AS total_quantity,
-    SUM(sd.total_price) AS total_revenue,
-    SUM(sd.quantity * pv.price_cost) AS total_cost,
-    SUM(sd.total_price) - SUM(sd.quantity * pv.price_cost) AS total_profit
-FROM sale_details sd
-JOIN products p ON sd.product_id = p.id
-JOIN product_variants pv ON sd.variant_id = pv.id
-JOIN sales s ON sd.sale_id = s.id
-WHERE s.deleted_at IS NULL
-GROUP BY p.id, p.name, pv.id, pv.name
-ORDER BY total_revenue DESC
-LIMIT 10;
-10. Return Analysis
-Return Rate by Product
-sql
-Copy
-SELECT 
-    p.name,
-    pv.name AS variant,
-    SUM(rd.quantity_returned) AS total_returned,
-    SUM(sd.quantity) AS total_sold,
-    (SUM(rd.quantity_returned) / NULLIF(SUM(sd.quantity), 0)) * 100 AS return_rate
-FROM return_details rd
-JOIN sale_details sd ON rd.product_id = sd.product_id AND rd.variant_id = sd.variant_id
-JOIN products p ON rd.product_id = p.id
-JOIN product_variants pv ON rd.variant_id = pv.id
-WHERE rd.deleted_at IS NULL
-GROUP BY p.id, p.name, pv.id, pv.name
-ORDER BY return_rate DESC;
-Implementation Recommendations
-Create a Dashboard View that shows all these metrics in real-time
+1. Maliyat ka Khulaasa Hisaab
+Gross Revenue:
+Pure saal ki kamaai (Sales Table ke total_amount ka jama).
 
-Schedule Daily Reports for key metrics like cash position and sales
+Net Revenue (After Returns):
+Gross Revenue minus wapis li gayi cheezon ki raqam (Returns Table ke total_refund_amount).
 
-Set Up Alerts for:
+Cost of Goods Sold (COGS):
+Bechi gayi cheezon ki asal qeemat (Sale_Details ke cost_price × quantity ka jama).
 
-Low inventory levels (below reorder_level)
+Gross Profit:
+Net Revenue minus COGS.
 
-High-value pending payments
+2. Adaigi Halat ki Tafseel
+Paid Amounts:
+Poori ada ki gayi sales (payment_status = "paid").
 
-Negative cash flow situations
+Partial Payments:
+Adai ka kuch hissa (payment_status = "partial").
 
-Implement Trend Analysis by comparing periods (week-over-week, month-over-month)
+Pending Payments:
+Baqi ada (payment_status = "pending").
 
-Sample PHP/Laravel Implementation
-For your Laravel application, you could create a BusinessMetricsService class:
+3. Maal ka Qeemat Lagana
+Current Inventory Value:
+Har product/variant ke stock_quantity × unki price_cost.
 
-php
-Copy
+Inventory Turnover Ratio:
+Saal mein kitni dafa maal bikta hai (COGS ÷ average inventory value).
+
+4. Naqdi Flow Ka Tajzia
+Cash In Hand:
+Cash_in_Hand_Details ke amount ka total.
+
+Cash Flow Breakdown:
+Har transaction type (sale, investment, etc.) ke hisab se naqdi ka aana/jaana.
+
+5. Faida/Nuqssan ka Bayan
+Net Profit/Loss:
+Gross Profit minus expenses aur investments.
+
+Profit/Loss by Category:
+Har category ke products se hone wala faida/nuqsaan.
+
+6. Chhoot aur Tax ka Hisaab
+Total Discounts Given:
+Tamam sales par di gayi chhoot (sales.discount ka jama).
+
+Total Taxes Collected:
+Sales par jama kiye gaye tax (sales.tax ka jama).
+
+7. Investment Ka Tajzia
+Total Investments:
+Investments Table ke amount ka jama.
+
+Investment vs Profit:
+Investments aur net profit ka muqabla.
+
+8. Customer Tajzia
+Top Customers by Spending:
+Sabse zyada kharch karne wale customers (sales.total_amount ke hisab se).
+
+9. Product Ka Performance
+Top Selling Products:
+Sabse zyada bikne wale products/variants (sale_details.quantity ke hisab se).
+
+10. Wapisii Ka Tajzia
+Return Rate by Product:
+Har product ka wapis hone ka percentage (returned quantity ÷ total sold quantity).
+
+11. Supplier Ka Performance
+On-time Delivery Rate:
+Supplier ne kitni baar time par maal pohunchaya (inventory_logs.reason = "restock" ke entries ke sath).
+
+Total Spend per Supplier:
+Har supplier se khareede gaye maal ki qeemat (products.supplier_id + product_variants.price_cost).
+
+12. Customer Loyalty ke Nuqta
+Repeat Purchase Rate:
+Ek customer kitni baar dobara khareedta hai (sales.customer_id ki history dekho).
+
+Customer Lifetime Value:
+Ek customer ne zindagi bhar mein kitni kamaai di (sales.total_amount ka jama).
+
+13. Stock Harkat Ka Tajzia
+Fast vs Slow-Moving Items:
+Jaldi bikne wale aur dheere bikne wale items (inventory_logs ki frequency dekho).
+
+Stockout Frequency:
+Kitni baar kisi product ka stock khatam hua (inventory_logs.reason = "sale" jab stock 0 ho).
+
+14. Qeemat ki Behtari
+Price Change Impact:
+Qeemat badalne ka asar bikri par (product_variants.price_sale ki history vs sales).
+
+Cost vs Sale Price Margin:
+Har variant par kitna faida (price_sale - price_cost).
+
+15. Kaam ki Kaifiyat
+Average Order Fulfillment Time:
+Order dene aur maal update hone ka waqt (sales.created_at vs inventory_logs timestamps).
+
+Return Processing Time:
+Wapisii ka application aur uska hal hone ka waqt (returns.return_date vs status update).
+
+16. Category/Segment Ka Tajzia
+Profitability by Category:
+Har category ke products se kitna faida hua.
+
+Subcategory Comparison:
+Engine oil vs filters vs tires ka performance.
+
+17. Tax aur Chhoot ka Asar
+Discount Effectiveness:
+Chhoot dene se bikri badi ya nahi? (sales.discount vs bikri ka trend).
+
+Tax Liability Forecasting:
+Agle mahine/saal kitna tax dena parega (sales.tax ka hisaab).
+
+18. Maal ki Sehat
+Days of Inventory Remaining:
+Abhi kitne din ka maal bacha hai (current stock ÷ rozana bikri).
+
+Dead Stock Identification:
+Woh items jo lambay arse se nahi biktay (X din mein koi sale nahi).
+
+19. Users ki Harkat
+Most Active Staff:
+Kaunse employees ne sabse zyada sales/returns kiye (sales/returns tables ke created_by).
+
+Peak Usage Times:
+System kab zyada use hota hai (created_at timestamps ka analysis).
+
+20. Future ke Andazay
+Demand Forecasting:
+Agle mahine mein kitna maal chahiye hoga (purane sales + mausam ka asar).
+
+Reorder Timing Suggestions:
+Kab naya maal mangwana chahiye (inventory_logs ke trends se).
+
+Tameer ke Mashwaray:
+
+Har hisaab ko mahine/saal ke hisab se track karo.
+
+Automated reports banane ke liye dashboards istemal karo.
+
+Alerts set karo (jaise stock kam hone par ya tax deadlines).
 <?php
 
 namespace App\Services;

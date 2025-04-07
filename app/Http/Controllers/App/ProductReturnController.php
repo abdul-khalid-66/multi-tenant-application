@@ -8,18 +8,34 @@ use App\Models\ProductReturn;
 use App\Models\ReturnDetail;
 use App\Models\ProductVariant;
 use App\Models\CashInHandDetail;
+use App\Models\Customer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class ProductReturnController extends Controller
 {
+
     public function index()
     {
-        $returns = ProductReturn::with(['sale', 'customer', 'returnDetails'])
+        $returns = ProductReturn::with(['customer', 'sale'])
+            ->when(request('status'), function($query, $status) {
+                return $query->where('status', $status);
+            })
+            ->when(request('customer_id'), function($query, $customerId) {
+                return $query->where('customer_id', $customerId);
+            })
+            ->when(request('start_date'), function($query, $startDate) {
+                return $query->whereDate('return_date', '>=', $startDate);
+            })
+            ->when(request('end_date'), function($query, $endDate) {
+                return $query->whereDate('return_date', '<=', $endDate);
+            })
             ->latest()
             ->paginate(10);
 
-        return view('app.sales.returns.index', compact('returns'));
+        $customers = Customer::orderBy('name')->get();
+
+        return view('app.sales.returns.index', compact('returns', 'customers'));
     }
 
     public function create()
@@ -142,11 +158,15 @@ class ProductReturnController extends Controller
                 ->with('error', 'Only pending returns can be edited');
         }
 
-        $return->load(['sale', 'returnDetails.product', 'returnDetails.variant']);
+        $return->load([
+            'sale.saleDetails', // Load sale with its details
+            'returnDetails.product', 
+            'returnDetails.variant',
+            'returnDetails.return' // Load the parent return
+        ]);
+        
         return view('app.sales.returns.edit', compact('return'));
     }
-
-
     public function approve(Request $request, ProductReturn $return)
     {
         DB::beginTransaction();
@@ -186,17 +206,75 @@ class ProductReturnController extends Controller
         }
     }
 
+    // public function analytics()
+    // {
+    //     $analytics = ProductReturn::select([
+    //         DB::raw('reason as return_reason'),
+    //         DB::raw('count(*) as count'),
+    //         DB::raw('sum(total_refund_amount) as total_refund')
+    //     ])
+    //         ->groupBy('reason')
+    //         ->orderBy('count', 'desc')
+    //         ->get();
+
+    //     return view('app.sales.returns.analytics', compact('analytics'));
+    // }
+
+
+    public function approval()
+    {
+        $pendingReturns = ProductReturn::with(['customer', 'sale'])
+            ->where('status', 'pending')
+            ->latest()
+            ->paginate(10);
+
+        return view('app.sales.returns.approval', compact('pendingReturns'));
+    }
+
     public function analytics()
     {
-        $analytics = ProductReturn::select([
-            DB::raw('reason as return_reason'),
-            DB::raw('count(*) as count'),
-            DB::raw('sum(total_refund_amount) as total_refund')
-        ])
+        // Reason statistics
+        $reasonStats = ProductReturn::select('reason', 
+                DB::raw('count(*) as count'),
+                DB::raw('sum(total_refund_amount) as total_amount'),
+                DB::raw('avg(total_refund_amount) as avg_amount')
+            )
             ->groupBy('reason')
-            ->orderBy('count', 'desc')
+            ->orderByDesc('count')
             ->get();
 
-        return view('app.sales.returns.analytics', compact('analytics'));
+        $totalReturns = ProductReturn::count();
+
+        // Monthly trend
+        $monthlyTrend = ProductReturn::select(
+                DB::raw("DATE_FORMAT(return_date, '%Y-%m') as month"),
+                DB::raw('count(*) as count')
+            )
+            ->groupBy('month')
+            ->orderBy('month')
+            ->pluck('count', 'month');
+
+        // Top returned products
+        $topProducts = ReturnDetail::select(
+                'product_id',
+                'variant_id',
+                DB::raw('products.name as product_name'),
+                DB::raw('product_variants.name as variant_name'),
+                DB::raw('count(*) as return_count'),
+                DB::raw('sum(quantity_returned) as total_quantity')
+            )
+            ->join('products', 'products.id', '=', 'return_details.product_id')
+            ->leftJoin('product_variants', 'product_variants.id', '=', 'return_details.variant_id')
+            ->groupBy('product_id', 'variant_id')
+            ->orderByDesc('return_count')
+            ->limit(10)
+            ->get();
+
+        return view('app.sales.returns.analytics', compact(
+            'reasonStats',
+            'totalReturns',
+            'monthlyTrend',
+            'topProducts'
+        ));
     }
 }

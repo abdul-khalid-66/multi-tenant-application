@@ -200,7 +200,7 @@
                 {{-- returns.pending --}}
                 <span class="text">Return Requests</span>
             </a>
-            <a href="" class="sidebar-item {{ request()->routeIs('returns.edit') && request()->route('return') === 'pending' ? 'active' : '' }}">
+            <a href="{{ route('returns.approvals') }}" class="sidebar-item {{ request()->routeIs('returns.approval') ? 'active' : '' }}">
                 <span class="icon">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                         <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
@@ -208,7 +208,7 @@
                 </span>
                 <span class="text">Approval Workflow</span>
             </a>
-            <a href="" class="sidebar-item {{ request()->routeIs('returns.analytics') ? 'active' : '' }}">
+            <a href="{{ route('returns.analytics') }}" class="sidebar-item {{ request()->routeIs('returns.analytics') ? 'active' : '' }}">
                 <span class="icon">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                         <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />

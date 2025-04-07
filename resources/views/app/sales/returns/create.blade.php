@@ -61,8 +61,8 @@
                                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sold Qty</th>
                                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Return Qty</th>
                                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Unit Price</th>
-                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Discount</th>
-                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tax</th>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Discount Per Item</th>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tax Per Item</th>
                                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
                                             </tr>
                                         </thead>
@@ -205,16 +205,16 @@
                                     onchange="updateRowTotal(this)">
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap unit-price">
-                                $${unitPrice.toFixed(2)}
+                                Rs.${unitPrice.toFixed(2)}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap discount-per-unit">
-                                $${discountPerUnit.toFixed(2)}
+                                Rs.${discountPerUnit.toFixed(2)}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap tax-per-unit">
-                                $${taxPerUnit.toFixed(2)}
+                                Rs.${taxPerUnit.toFixed(2)}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap row-total">
-                                $${refundPerUnit}
+                                Rs.${refundPerUnit}
                             </td>
                         `;
                         container.appendChild(row);
@@ -247,7 +247,7 @@
             
             // Calculate total refund (unit price + tax - discount) * quantity
             const totalRefund = ((unitPrice + taxPerUnit - discountPerUnit) * quantity).toFixed(2);
-            row.querySelector('.row-total').textContent = `$${totalRefund}`;
+            row.querySelector('.row-total').textContent = `Rs.${totalRefund}`;
         }
     </script>
     @endpush

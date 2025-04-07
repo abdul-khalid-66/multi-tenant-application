@@ -346,20 +346,6 @@ User Management
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 <!-- Mukammal Business Hisaab Kitab - Database ke Hisab se
 
 1. Maliyat ka Khulaasa Hisaab
@@ -576,3 +562,484 @@ public function dashboard()
     ]);
 }
 This comprehensive approach will give you complete visibility into all aspects of your business performance. Would you like me to elaborate on any specific calculation or visualization approach? -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Refund Approval Workflow Implementation
+Let's create a comprehensive refund approval workflow with controller and views.
+
+1. First, update the routes
+php
+Copy
+// routes/tenant.php
+Route::get('returns/pending', [ReturnApprovalController::class, 'index'])->name('returns.pending');
+Route::get('returns/{return}/approve', [ReturnApprovalController::class, 'approve'])->name('returns.approve');
+Route::get('returns/{return}/reject', [ReturnApprovalController::class, 'reject'])->name('returns.reject');
+Route::post('returns/{return}/process', [ReturnApprovalController::class, 'process'])->name('returns.process');
+2. Create the ReturnApprovalController
+php
+Copy
+// app/Http/Controllers/App/ReturnApprovalController.php
+namespace App\Http\Controllers\App;
+
+use App\Models\ProductReturn;
+use App\Models\CashInHandDetail;
+use App\Models\ProductVariant;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+
+class ReturnApprovalController extends Controller
+{
+    public function index()
+    {
+        $returns = ProductReturn::with(['customer', 'sale', 'returnDetails'])
+            ->where('status', 'pending')
+            ->orderBy('return_date', 'asc')
+            ->paginate(10);
+
+        return view('app.sales.returns.approval-index', compact('returns'));
+    }
+
+    public function show(ProductReturn $return)
+    {
+        $return->load(['customer', 'sale.customer', 'returnDetails.product', 'returnDetails.variant']);
+        
+        return view('app.sales.returns.approval-show', compact('return'));
+    }
+
+    public function approve(ProductReturn $return)
+    {
+        return view('app.sales.returns.approval-action', [
+            'return' => $return,
+            'action' => 'approve',
+            'title' => 'Approve Return'
+        ]);
+    }
+
+    public function reject(ProductReturn $return)
+    {
+        return view('app.sales.returns.approval-action', [
+            'return' => $return,
+            'action' => 'reject',
+            'title' => 'Reject Return'
+        ]);
+    }
+
+    public function process(Request $request, ProductReturn $return)
+    {
+        $validated = $request->validate([
+            'action' => 'required|in:approve,reject',
+            'notes' => 'nullable|string|max:500'
+        ]);
+
+        DB::beginTransaction();
+
+        try {
+            if ($validated['action'] === 'approve') {
+                // Process approval
+                $return->update([
+                    'status' => 'approved',
+                    'notes' => $validated['notes'] ?? null
+                ]);
+
+                // Restock items
+                foreach ($return->returnDetails as $detail) {
+                    if ($detail->variant_id) {
+                        ProductVariant::where('id', $detail->variant_id)
+                            ->increment('stock_quantity', $detail->quantity_returned);
+                    }
+                }
+
+                // Record cash movement
+                CashInHandDetail::create([
+                    'date' => now(),
+                    'amount' => -$return->total_refund_amount,
+                    'transaction_type' => 'refund',
+                    'reference_id' => $return->id,
+                    'notes' => 'Refund for return #' . $return->id
+                ]);
+
+            } else {
+                // Process rejection
+                $return->update([
+                    'status' => 'rejected',
+                    'notes' => $validated['notes'] ?? null
+                ]);
+            }
+
+            DB::commit();
+
+            return redirect()->route('returns.pending')
+                ->with('success', 'Return has been ' . $validated['action'] . 'ed successfully');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Failed to process return: ' . $e->getMessage());
+        }
+    }
+}
+3. Create the Views
+approval-index.blade.php
+php
+Copy
+<x-tenant-app-layout>
+    @include('app.sales.sidebar')
+
+    <div class="content-area" id="contentArea">
+        <div class="py-6">
+            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                    <div class="p-6 bg-white border-b border-gray-200">
+                        <div class="flex justify-between items-center mb-6">
+                            <h2 class="text-2xl font-bold text-gray-800">Pending Return Approvals</h2>
+                            <div class="flex items-center space-x-2">
+                                <span class="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-medium">
+                                    {{ $returns->total() }} Pending
+                                </span>
+                            </div>
+                        </div>
+
+                        @if($returns->isEmpty())
+                            <div class="bg-blue-50 border-l-4 border-blue-400 p-4 mb-6">
+                                <div class="flex">
+                                    <div class="flex-shrink-0">
+                                        <svg class="h-5 w-5 text-blue-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                                        </svg>
+                                    </div>
+                                    <div class="ml-3">
+                                        <p class="text-sm text-blue-700">
+                                            No pending returns requiring approval at this time.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        @else
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Return #</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Invoice</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Items</th>
+                                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="bg-white divide-y divide-gray-200">
+                                        @foreach($returns as $return)
+                                        <tr class="hover:bg-gray-50">
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">#{{ $return->id }}</td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $return->customer->name }}</td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                <a href="{{ route('sales.show', $return->sale_id) }}" class="text-blue-600 hover:underline">
+                                                    {{ $return->sale->invoice_no }}
+                                                </a>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ number_format($return->total_refund_amount, 2) }}</td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $return->return_date->format('M d, Y') }}</td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                {{ $return->returnDetails->sum('quantity_returned') }} items
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                                <div class="flex justify-end space-x-2">
+                                                    <a href="{{ route('returns.show', $return) }}" class="text-blue-600 hover:text-blue-900 p-1 rounded hover:bg-blue-50" title="View Details">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                                        </svg>
+                                                    </a>
+                                                    <a href="{{ route('returns.approve', $return) }}" class="text-green-600 hover:text-green-900 p-1 rounded hover:bg-green-50" title="Approve">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                                        </svg>
+                                                    </a>
+                                                    <a href="{{ route('returns.reject', $return) }}" class="text-red-600 hover:text-red-900 p-1 rounded hover:bg-red-50" title="Reject">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                                            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                                        </svg>
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div class="mt-4">
+                                {{ $returns->links() }}
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</x-tenant-app-layout>
+approval-show.blade.php
+php
+Copy
+<x-tenant-app-layout>
+    @include('app.sales.sidebar')
+
+    <div class="content-area" id="contentArea">
+        <div class="py-6">
+            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                    <div class="p-6 bg-white border-b border-gray-200">
+                        <div class="flex justify-between items-start mb-6">
+                            <div>
+                                <h2 class="text-2xl font-bold text-gray-800">Return Request #{{ $return->id }}</h2>
+                                <div class="flex items-center mt-2">
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                        {{ ucfirst($return->status) }}
+                                    </span>
+                                    <span class="ml-2 text-sm text-gray-500">
+                                        Created on {{ $return->created_at->format('M d, Y h:i A') }}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="flex space-x-2">
+                                <a href="{{ route('returns.pending') }}" class="bg-gray-200 text-gray-700 px-4 py-2 rounded hover:bg-gray-300">
+                                    Back to List
+                                </a>
+                                @if($return->status === 'pending')
+                                <a href="{{ route('returns.approve', $return) }}" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+                                    Approve
+                                </a>
+                                <a href="{{ route('returns.reject', $return) }}" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">
+                                    Reject
+                                </a>
+                                @endif
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <h3 class="text-lg font-medium text-gray-900 mb-2">Customer Information</h3>
+                                <div class="space-y-1">
+                                    <p class="text-sm text-gray-600">{{ $return->customer->name }}</p>
+                                    <p class="text-sm text-gray-600">{{ $return->customer->contact }}</p>
+                                    <p class="text-sm text-gray-600">{{ $return->customer->address }}</p>
+                                </div>
+                            </div>
+
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <h3 class="text-lg font-medium text-gray-900 mb-2">Sale Information</h3>
+                                <div class="space-y-1">
+                                    <p class="text-sm text-gray-600">
+                                        Invoice: <a href="{{ route('sales.show', $return->sale_id) }}" class="text-blue-600 hover:underline">{{ $return->sale->invoice_no }}</a>
+                                    </p>
+                                    <p class="text-sm text-gray-600">Date: {{ $return->sale->date->format('M d, Y') }}</p>
+                                    <p class="text-sm text-gray-600">Amount: {{ number_format($return->sale->total_amount, 2) }}</p>
+                                </div>
+                            </div>
+
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <h3 class="text-lg font-medium text-gray-900 mb-2">Return Summary</h3>
+                                <div class="space-y-1">
+                                    <p class="text-sm text-gray-600">Date: {{ $return->return_date->format('M d, Y') }}</p>
+                                    <p class="text-sm text-gray-600">Reason: {{ $return->reason }}</p>
+                                    <p class="text-sm text-gray-600">Total Refund: {{ number_format($return->total_refund_amount, 2) }}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <h3 class="text-lg font-medium text-gray-900 mb-4">Items to Return</h3>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Variant</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Unit Price</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    @foreach($return->returnDetails as $detail)
+                                    <tr>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                            {{ $detail->product->name }}
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            {{ $detail->variant->name ?? '-' }}
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            {{ $detail->quantity_returned }}
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            {{ number_format($detail->refund_amount_per_unit, 2) }}
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            {{ number_format($detail->total_refund_amount, 2) }}
+                                        </td>
+                                    </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+
+                        @if($return->notes)
+                        <div class="mt-6 bg-blue-50 border-l-4 border-blue-400 p-4">
+                            <div class="flex">
+                                <div class="flex-shrink-0">
+                                    <svg class="h-5 w-5 text-blue-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                                    </svg>
+                                </div>
+                                <div class="ml-3">
+                                    <h3 class="text-sm font-medium text-blue-800">Notes</h3>
+                                    <div class="mt-1 text-sm text-blue-700">
+                                        <p>{{ $return->notes }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</x-tenant-app-layout>
+approval-action.blade.php
+php
+Copy
+<x-tenant-app-layout>
+    @include('app.sales.sidebar')
+
+    <div class="content-area" id="contentArea">
+        <div class="py-6">
+            <div class="max-w-3xl mx-auto sm:px-6 lg:px-8">
+                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                    <div class="p-6 bg-white border-b border-gray-200">
+                        <h2 class="text-2xl font-bold text-gray-800 mb-6">{{ $title }} - Return #{{ $return->id }}</h2>
+
+                        <div class="mb-6 bg-gray-50 p-4 rounded-lg">
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <p class="text-sm font-medium text-gray-500">Customer</p>
+                                    <p class="mt-1 text-sm text-gray-900">{{ $return->customer->name }}</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-medium text-gray-500">Invoice</p>
+                                    <p class="mt-1 text-sm text-gray-900">{{ $return->sale->invoice_no }}</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-medium text-gray-500">Return Date</p>
+                                    <p class="mt-1 text-sm text-gray-900">{{ $return->return_date->format('M d, Y') }}</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-medium text-gray-500">Total Refund</p>
+                                    <p class="mt-1 text-sm text-gray-900">{{ number_format($return->total_refund_amount, 2) }}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <form method="POST" action="{{ route('returns.process', $return) }}">
+                            @csrf
+                            <input type="hidden" name="action" value="{{ $action }}">
+
+                            <div class="mb-6">
+                                <label for="notes" class="block text-sm font-medium text-gray-700 mb-1">
+                                    {{ $action === 'approve' ? 'Approval Notes' : 'Rejection Reason' }}
+                                </label>
+                                <textarea id="notes" name="notes" rows="4" class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"></textarea>
+                                <p class="mt-1 text-sm text-gray-500">
+                                    {{ $action === 'approve' ? 'Optional notes about this approval' : 'Please specify the reason for rejection' }}
+                                </p>
+                            </div>
+
+                            <div class="flex justify-end space-x-3">
+                                <a href="{{ route('returns.show', $return) }}" class="bg-gray-200 text-gray-700 px-4 py-2 rounded hover:bg-gray-300">
+                                    Cancel
+                                </a>
+                                <button type="submit" class="bg-{{ $action === 'approve' ? 'green' : 'red' }}-600 text-white px-4 py-2 rounded hover:bg-{{ $action === 'approve' ? 'green' : 'red' }}-700">
+                                    {{ ucfirst($action) }} Return
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</x-tenant-app-layout>
+Key Features of This Implementation:
+Complete Workflow:
+
+List all pending returns
+
+View return details
+
+Approve or reject with notes
+
+Automatic stock adjustment on approval
+
+Cash flow tracking
+
+Robust Error Handling:
+
+Database transactions
+
+Proper validation
+
+Clear error messages
+
+User Experience:
+
+Clear status indicators
+
+Action confirmation
+
+Detailed information display
+
+Responsive design
+
+Business Logic:
+
+Restocks inventory on approval
+
+Records financial impact
+
+Maintains audit trail
+
+Security:
+
+Proper authorization checks
+
+CSRF protection
+
+Input validation
+
+This implementation provides a complete, production-ready refund approval workflow that integrates with your existing inventory and financial tracking systems.

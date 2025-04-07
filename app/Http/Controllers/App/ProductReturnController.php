@@ -277,42 +277,45 @@ class ProductReturnController extends Controller
 
     public function analytics()
     {
-        // Reason statistics
-        $reasonStats = ProductReturn::select('reason', 
-                DB::raw('count(*) as count'),
-                DB::raw('sum(total_refund_amount) as total_amount'),
-                DB::raw('avg(total_refund_amount) as avg_amount')
-            )
+        // Reason statistics using Eloquent
+        $reasonStats = ProductReturn::query()
+            ->select('reason')
+            ->selectRaw('count(*) as count')
+            ->selectRaw('sum(total_refund_amount) as total_amount')
+            ->selectRaw('avg(total_refund_amount) as avg_amount')
             ->groupBy('reason')
             ->orderByDesc('count')
             ->get();
 
         $totalReturns = ProductReturn::count();
 
-        // Monthly trend
-        $monthlyTrend = ProductReturn::select(
-                DB::raw("DATE_FORMAT(return_date, '%Y-%m') as month"),
-                DB::raw('count(*) as count')
-            )
+        // Monthly trend using Eloquent
+        $monthlyTrend = ProductReturn::query()
+            ->selectRaw("DATE_FORMAT(return_date, '%Y-%m') as month")
+            ->selectRaw('count(*) as count')
             ->groupBy('month')
             ->orderBy('month')
             ->pluck('count', 'month');
 
-        // Top returned products
-        $topProducts = ReturnDetail::select(
-                'product_id',
-                'variant_id',
-                DB::raw('products.name as product_name'),
-                DB::raw('product_variants.name as variant_name'),
-                DB::raw('count(*) as return_count'),
-                DB::raw('sum(quantity_returned) as total_quantity')
-            )
-            ->join('products', 'products.id', '=', 'return_details.product_id')
-            ->leftJoin('product_variants', 'product_variants.id', '=', 'return_details.variant_id')
-            ->groupBy('product_id', 'variant_id')
+        // Top returned products using Eloquent relationships
+        $topProducts = ReturnDetail::with(['product', 'variant'])
+            ->select(['product_id', 'variant_id'])
+            ->selectRaw('count(*) as return_count')
+            ->selectRaw('sum(quantity_returned) as total_quantity')
+            ->groupBy(['product_id', 'variant_id'])
             ->orderByDesc('return_count')
             ->limit(10)
-            ->get();
+            ->get()
+            ->map(function ($item) {
+                return (object) [
+                    'product_id' => $item->product_id,
+                    'variant_id' => $item->variant_id,
+                    'product_name' => $item->product->name,
+                    'variant_name' => $item->variant?->name,
+                    'return_count' => $item->return_count,
+                    'total_quantity' => $item->total_quantity
+                ];
+            });
 
         return view('app.sales.returns.analytics', compact(
             'reasonStats',

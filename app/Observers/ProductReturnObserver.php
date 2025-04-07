@@ -63,7 +63,7 @@ class ProductReturnObserver
      */
     protected function processReturn(ProductReturn $productReturn, string $reason = 'return_approved'): void
     {
-        $productReturn->details->each(function ($detail) use ($productReturn, $reason) {
+        $productReturn->returnDetails->each(function ($detail) use ($productReturn, $reason) {
             $variant = ProductVariant::find($detail->variant_id);
 
             if ($variant) {

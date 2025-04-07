@@ -114,8 +114,8 @@ class SaleController extends Controller
 
                 // Update stock if variant exists
                 if ($item['variant_id']) {
-                    $variant = ProductVariant::find($item['variant_id']);
-                    $variant->decrement('stock_quantity', $item['quantity']);
+                    // $variant = ProductVariant::find($item['variant_id']);
+                    // $variant->decrement('stock_quantity', $item['quantity']);
                 } else {
                     // Update product stock if no variants
                     $product = Product::find($item['product_id']);

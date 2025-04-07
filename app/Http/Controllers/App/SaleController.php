@@ -196,35 +196,75 @@ class SaleController extends Controller
 
         return $pdf->download('invoice-' . $sale->invoice_no . '.pdf');
     }
+// 08/04/2025
+    // public function getSaleItems(Sale $sale)
+    // {
+    //     try {
+    //         // Get all return details for this sale's products/variants
+    //         $returnDetails = ReturnDetail::whereIn('return_id', function ($query) use ($sale) {
+    //             $query->select('id')
+    //                 ->from('returns')
+    //                 ->where('sale_id', $sale->id);
+    //         })
+    //             ->get()
+    //             ->groupBy(function ($item) {
+    //                 return $item->product_id . '-' . $item->variant_id;
+    //             });
+
+    //         $items = $sale->saleDetails()->with(['product', 'variant'])
+    //             ->get()
+    //             ->map(function ($detail) use ($sale, $returnDetails) {
+    //                 // Find matching return details for this product/variant
+    //                 $key = $detail->product_id . '-' . $detail->variant_id;
+    //                 $returnedQty = $returnDetails->has($key)
+    //                     ? $returnDetails[$key]->sum('quantity_returned')
+    //                     : 0;
+
+    //                 $totalQuantity = $sale->saleDetails->sum('quantity');
+
+    //                 $taxPerUnit = $totalQuantity > 0 ? $sale->tax / $totalQuantity : 0;
+    //                 $discountPerUnit = $totalQuantity > 0 ? $sale->discount / $totalQuantity : 0;
+
+    //                 return [
+    //                     'id' => $detail->id,
+    //                     'product_id' => $detail->product_id,
+    //                     'variant_id' => $detail->variant_id,
+    //                     'product_name' => $detail->product->name,
+    //                     'variant_name' => $detail->variant?->name,
+    //                     'sell_price' => $detail->sell_price,
+    //                     'quantity' => $detail->quantity,
+    //                     'remaining_quantity' => $detail->quantity - $returnedQty,
+    //                     'tax_per_unit' => $taxPerUnit,
+    //                     'discount_per_unit' => $discountPerUnit
+    //                 ];
+    //             });
+
+    //         return response()->json($items);
+    //     } catch (\Exception $e) {
+    //         return response()->json([
+    //             'error' => 'Failed to load sale items',
+    //             'message' => $e->getMessage()
+    //         ], 500);
+    //     }
+    // }
 
     public function getSaleItems(Sale $sale)
     {
         try {
-            // Get all return details for this sale's products/variants
-            $returnDetails = ReturnDetail::whereIn('return_id', function ($query) use ($sale) {
-                $query->select('id')
-                    ->from('returns')
-                    ->where('sale_id', $sale->id);
-            })
-                ->get()
-                ->groupBy(function ($item) {
-                    return $item->product_id . '-' . $item->variant_id;
-                });
-
             $items = $sale->saleDetails()->with(['product', 'variant'])
                 ->get()
-                ->map(function ($detail) use ($sale, $returnDetails) {
-                    // Find matching return details for this product/variant
-                    $key = $detail->product_id . '-' . $detail->variant_id;
-                    $returnedQty = $returnDetails->has($key)
-                        ? $returnDetails[$key]->sum('quantity_returned')
-                        : 0;
-
+                ->map(function ($detail) use ($sale) {
+                    $returnedQty = ReturnDetail::whereHas('return', function($query) use ($sale) {
+                            $query->where('sale_id', $sale->id);
+                        })
+                        ->where('product_id', $detail->product_id)
+                        ->where('variant_id', $detail->variant_id)
+                        ->sum('quantity_returned');
+    
                     $totalQuantity = $sale->saleDetails->sum('quantity');
-
                     $taxPerUnit = $totalQuantity > 0 ? $sale->tax / $totalQuantity : 0;
                     $discountPerUnit = $totalQuantity > 0 ? $sale->discount / $totalQuantity : 0;
-
+    
                     return [
                         'id' => $detail->id,
                         'product_id' => $detail->product_id,
@@ -238,7 +278,7 @@ class SaleController extends Controller
                         'discount_per_unit' => $discountPerUnit
                     ];
                 });
-
+    
             return response()->json($items);
         } catch (\Exception $e) {
             return response()->json([
@@ -249,7 +289,7 @@ class SaleController extends Controller
     }
 
 
-
+// 08/04/2025
     // public function edit(Sale $sale)
     // {
     //     $sale->load(['customer', 'saleDetails.product', 'saleDetails.variant']);

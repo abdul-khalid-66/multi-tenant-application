@@ -31,7 +31,7 @@ class ReturnApprovalController extends Controller
 
     public function approve(ProductReturn $return)
     {
-        return view('app.sales.returns.approval-action', [
+        return view('app.sales.returns.approval_action', [
             'return' => $return,
             'action' => 'approve',
             'title' => 'Approve Return'
@@ -40,7 +40,7 @@ class ReturnApprovalController extends Controller
 
     public function reject(ProductReturn $return)
     {
-        return view('app.sales.returns.approval-action', [
+        return view('app.sales.returns.approval_action', [
             'return' => $return,
             'action' => 'reject',
             'title' => 'Reject Return'

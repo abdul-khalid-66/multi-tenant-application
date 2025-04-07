@@ -43,8 +43,20 @@ class SaleDetail extends Model
         return $this->belongsTo(ProductVariant::class);
     }
 
+    public function getReturnableQuantityAttribute()
+    {
+        $returned = ReturnDetail::whereHas('return', function($query) {
+                $query->where('sale_id', $this->sale_id);
+            })
+            ->where('product_id', $this->product_id)
+            ->where('variant_id', $this->variant_id)
+            ->sum('quantity_returned');
+        
+        return $this->quantity - $returned;
+    }
+
     public function returnDetails()
     {
-        return $this->hasMany(ReturnDetail::class, 'sale_detail_id');
+        return $this->hasMany(ReturnDetail::class, 'product_id', 'product_id')->where('variant_id', $this->variant_id);
     }
 }

@@ -40,8 +40,30 @@ class ProductReturnController extends Controller
 
     public function create()
     {
-        $sales = Sale::with(['customer', 'saleDetails.product', 'saleDetails.variant'])
+        $sales = Sale::with(['customer', 'saleDetails' => function($query) {
+                $query->with(['product', 'variant', 'returnDetails'])
+                    ->whereHas('product') // Ensure product exists
+                    ->where(function($q) {
+                        $q->whereDoesntHave('returnDetails')
+                          ->orWhereHas('returnDetails', function($q) {
+                              $q->selectRaw('product_id, variant_id, sum(quantity_returned) as total_returned')
+                                ->groupBy('product_id', 'variant_id')
+                                ->havingRaw('sum(quantity_returned) < sale_details.quantity');
+                          });
+                    });
+            }])
             ->where('payment_status', 'paid')
+            ->whereHas('saleDetails', function($query) {
+                $query->whereHas('product')
+                    ->where(function($q) {
+                        $q->whereDoesntHave('returnDetails')
+                          ->orWhereHas('returnDetails', function($q) {
+                              $q->selectRaw('product_id, variant_id, sum(quantity_returned) as total_returned')
+                                ->groupBy('product_id', 'variant_id')
+                                ->havingRaw('sum(quantity_returned) < sale_details.quantity');
+                          });
+                    });
+            })
             ->latest()
             ->get();
 
@@ -59,8 +81,30 @@ class ProductReturnController extends Controller
                 'items' => 'required|array|min:1',
                 'items.*.sale_detail_id' => 'required|exists:sale_details,id',
                 'items.*.product_id' => 'required|exists:products,id',
-                'items.*.quantity' => 'required|integer|min:1'
-                // Note: variant_id is not required in validation
+                'items.*.quantity' => [
+                    'required',
+                    'integer',
+                    'min:1',
+                    function ($attribute, $value, $fail) use ($request) {
+                        $saleDetailId = str_replace(['items.', '.quantity'], '', $attribute);
+                        $saleDetail = \App\Models\SaleDetail::find($request->input("items.$saleDetailId.sale_detail_id"));
+                        
+                        if ($saleDetail) {
+                            $returnedQty = ReturnDetail::whereHas('return', function($query) use ($saleDetail) {
+                                    $query->where('sale_id', $saleDetail->sale_id);
+                                })
+                                ->where('product_id', $saleDetail->product_id)
+                                ->where('variant_id', $saleDetail->variant_id)
+                                ->sum('quantity_returned');
+                            
+                            $available = $saleDetail->quantity - $returnedQty;
+                            
+                            if ($value > $available) {
+                                $fail("Cannot return more than $available items for this product.");
+                            }
+                        }
+                    }
+                ]
             ]);
 
             $sale = Sale::with('saleDetails')->find($validated['sale_id']);

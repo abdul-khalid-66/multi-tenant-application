@@ -7,6 +7,7 @@ use App\Models\Sale;
 use App\Models\Customer;
 use App\Models\Product;
 use App\Models\ProductVariant;
+use App\Models\ReturnDetail;
 use App\Models\SaleDetail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -196,29 +197,58 @@ class SaleController extends Controller
         return $pdf->download('invoice-' . $sale->invoice_no . '.pdf');
     }
 
-    // In SaleController.php
     public function getSaleItems(Sale $sale)
     {
-        $items = $sale->saleDetails()->with(['product', 'variant'])
-            ->get()
-            ->map(function ($detail) {
-                // Calculate already returned quantities
-                $returnedQty = $detail->returnDetails()->sum('quantity_returned');
+        try {
+            // Get all return details for this sale's products/variants
+            $returnDetails = ReturnDetail::whereIn('return_id', function ($query) use ($sale) {
+                $query->select('id')
+                    ->from('returns')
+                    ->where('sale_id', $sale->id);
+            })
+                ->get()
+                ->groupBy(function ($item) {
+                    return $item->product_id . '-' . $item->variant_id;
+                });
 
-                return [
-                    'id' => $detail->id,
-                    'product_name' => $detail->product->name,
-                    'variant_name' => $detail->variant?->name,
-                    'sell_price' => $detail->sell_price,
-                    'quantity' => $detail->quantity,
-                    'remaining_quantity' => $detail->quantity - $returnedQty,
-                    'tax_per_unit' => $detail->sale->tax / $detail->sale->saleDetails->sum('quantity'),
-                    'discount_per_unit' => $detail->sale->discount / $detail->sale->saleDetails->sum('quantity')
-                ];
-            });
+            $items = $sale->saleDetails()->with(['product', 'variant'])
+                ->get()
+                ->map(function ($detail) use ($sale, $returnDetails) {
+                    // Find matching return details for this product/variant
+                    $key = $detail->product_id . '-' . $detail->variant_id;
+                    $returnedQty = $returnDetails->has($key)
+                        ? $returnDetails[$key]->sum('quantity_returned')
+                        : 0;
 
-        return response()->json(['items' => $items]);
+                    $totalQuantity = $sale->saleDetails->sum('quantity');
+
+                    $taxPerUnit = $totalQuantity > 0 ? $sale->tax / $totalQuantity : 0;
+                    $discountPerUnit = $totalQuantity > 0 ? $sale->discount / $totalQuantity : 0;
+
+                    return [
+                        'id' => $detail->id,
+                        'product_id' => $detail->product_id,
+                        'variant_id' => $detail->variant_id,
+                        'product_name' => $detail->product->name,
+                        'variant_name' => $detail->variant?->name,
+                        'sell_price' => $detail->sell_price,
+                        'quantity' => $detail->quantity,
+                        'remaining_quantity' => $detail->quantity - $returnedQty,
+                        'tax_per_unit' => $taxPerUnit,
+                        'discount_per_unit' => $discountPerUnit
+                    ];
+                });
+
+            return response()->json($items);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Failed to load sale items',
+                'message' => $e->getMessage()
+            ], 500);
+        }
     }
+
+
 
     // public function edit(Sale $sale)
     // {

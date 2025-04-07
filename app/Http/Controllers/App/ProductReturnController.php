@@ -24,8 +24,9 @@ class ProductReturnController extends Controller
 
     public function create()
     {
-        $sales = Sale::with(['saleDetails.product', 'saleDetails.variant'])
+        $sales = Sale::with(['customer', 'saleDetails.product', 'saleDetails.variant'])
             ->where('payment_status', 'paid')
+            ->latest()
             ->get();
 
         return view('app.sales.returns.create', compact('sales'));
@@ -38,39 +39,68 @@ class ProductReturnController extends Controller
         try {
             $validated = $request->validate([
                 'sale_id' => 'required|exists:sales,id',
-                'return_date' => 'required|date',
                 'reason' => 'required|string',
                 'items' => 'required|array|min:1',
                 'items.*.sale_detail_id' => 'required|exists:sale_details,id',
+                'items.*.product_id' => 'required|exists:products,id',
                 'items.*.quantity' => 'required|integer|min:1'
+                // Note: variant_id is not required in validation
             ]);
 
-            $sale = Sale::find($validated['sale_id']);
+            $sale = Sale::with('saleDetails')->find($validated['sale_id']);
             $totalRefund = 0;
             $items = [];
 
             foreach ($validated['items'] as $item) {
                 $saleDetail = $sale->saleDetails()->find($item['sale_detail_id']);
 
-                // Verify available quantity
-                $returnedQty = $saleDetail->returnDetails()->sum('quantity_returned');
-                $availableQty = $saleDetail->quantity - $returnedQty;
+                // Get variant_id from saleDetail if not in request
+                $variantId = $item['variant_id'] ?? $saleDetail->variant_id;
+
+                // Calculate total quantity sold for this product/variant in the sale
+                $totalSoldQuery = $sale->saleDetails()
+                    ->where('product_id', $item['product_id']);
+
+                if ($variantId) {
+                    $totalSoldQuery->where('variant_id', $variantId);
+                } else {
+                    $totalSoldQuery->whereNull('variant_id');
+                }
+
+                $totalSoldInSale = $totalSoldQuery->sum('quantity');
+
+                // Calculate total already returned for this product/variant in the sale
+                $alreadyReturnedQuery = ReturnDetail::whereHas('return', function ($query) use ($sale) {
+                    $query->where('sale_id', $sale->id);
+                })
+                    ->where('product_id', $item['product_id']);
+
+                if ($variantId) {
+                    $alreadyReturnedQuery->where('variant_id', $variantId);
+                } else {
+                    $alreadyReturnedQuery->whereNull('variant_id');
+                }
+
+                $alreadyReturned = $alreadyReturnedQuery->sum('quantity_returned');
+
+                $availableQty = $totalSoldInSale - $alreadyReturned;
 
                 if ($item['quantity'] > $availableQty) {
-                    throw new \Exception("Cannot return more than available quantity for item");
+                    throw new \Exception("Cannot return more than available quantity for this item. Available: {$availableQty}");
                 }
 
                 // Calculate proportional tax and discount
-                $taxPerUnit = $sale->tax / $sale->saleDetails->sum('quantity');
-                $discountPerUnit = $sale->discount / $sale->saleDetails->sum('quantity');
+                $totalItemsInSale = $sale->saleDetails->sum('quantity');
+                $taxPerUnit = $totalItemsInSale > 0 ? $sale->tax / $totalItemsInSale : 0;
+                $discountPerUnit = $totalItemsInSale > 0 ? $sale->discount / $totalItemsInSale : 0;
 
                 $refundPerUnit = $saleDetail->sell_price + $taxPerUnit - $discountPerUnit;
                 $totalItemRefund = $refundPerUnit * $item['quantity'];
                 $totalRefund += $totalItemRefund;
 
                 $items[] = [
-                    'product_id' => $saleDetail->product_id,
-                    'variant_id' => $saleDetail->variant_id,
+                    'product_id' => $item['product_id'],
+                    'variant_id' => $variantId,
                     'quantity_returned' => $item['quantity'],
                     'refund_amount_per_unit' => $refundPerUnit,
                     'total_refund_amount' => $totalItemRefund
@@ -80,7 +110,7 @@ class ProductReturnController extends Controller
             $return = ProductReturn::create([
                 'sale_id' => $validated['sale_id'],
                 'customer_id' => $sale->customer_id,
-                'return_date' => $validated['return_date'],
+                'return_date' => now(),
                 'reason' => $validated['reason'],
                 'status' => 'pending',
                 'total_refund_amount' => $totalRefund

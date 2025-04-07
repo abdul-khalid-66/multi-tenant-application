@@ -58,7 +58,7 @@ class ReturnDetailObserver
     {
         // Update parent return total
         $detail->return->update([
-            'total_refund_amount' => $detail->return->details->sum('total_refund_amount')
+            'total_refund_amount' => $detail->return->returnDetails->sum('total_refund_amount')
         ]);
     }
 }

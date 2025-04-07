@@ -42,4 +42,9 @@ class SaleDetail extends Model
     {
         return $this->belongsTo(ProductVariant::class);
     }
+
+    public function returnDetails()
+    {
+        return $this->hasMany(ReturnDetail::class, 'sale_detail_id');
+    }
 }

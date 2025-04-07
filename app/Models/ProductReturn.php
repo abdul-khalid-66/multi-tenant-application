@@ -10,7 +10,7 @@ class ProductReturn extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $table = 'returns'; // Explicitly set table name
+    protected $table = 'returns';
 
     protected $fillable = [
         'sale_id',
@@ -31,6 +31,14 @@ class ProductReturn extends Model
         'approved' => 'Approved',
         'rejected' => 'Rejected',
         'processed' => 'Processed'
+    ];
+
+    public const REASONS = [
+        'defective' => 'Defective Product',
+        'wrong_item' => 'Wrong Item Shipped',
+        'changed_mind' => 'Customer Changed Mind',
+        'late_delivery' => 'Late Delivery',
+        'other' => 'Other'
     ];
 
     public function sale()

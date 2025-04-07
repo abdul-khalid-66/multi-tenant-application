@@ -19,6 +19,7 @@ use App\Http\Controllers\App\{
     InventoryLogController,
     InvoiceController,
     ProductReturnController,
+    ReturnApprovalController,
 };
 
 use Illuminate\Support\Facades\Route;
@@ -114,9 +115,22 @@ Route::middleware([
 
 
             // Return/refund 
+            // Route::get('sales/{sale}/items', [\App\Http\Controllers\App\SaleController::class, 'getSaleItems'])
+            //     ->name('sales.items');
+            // Add this route before your resource routes
             Route::get('sales/{sale}/items', [\App\Http\Controllers\App\SaleController::class, 'getSaleItems'])
                 ->name('sales.items');
+
+            // Then your existing resource route
             Route::resource('returns', ProductReturnController::class);
+
+            // routes/tenant.php
+            // Route::get('returns/pending', [ReturnApprovalController::class, 'index'])->name('returns.pending');
+            Route::get('returns/{return}/approve', [ReturnApprovalController::class, 'approve'])->name('returns.approve');
+            Route::get('returns/{return}/reject', [ReturnApprovalController::class, 'reject'])->name('returns.reject');
+            Route::post('returns/{return}/process', [ReturnApprovalController::class, 'process'])->name('returns.process');
+
+
             Route::get('returns/analytics', [ProductReturnController::class, 'analytics'])->name('returns.analytics');
             Route::post('returns/{return}/approve', [ProductReturnController::class, 'approve'])->name('returns.approve');
         });

@@ -168,14 +168,14 @@ class SaleController extends Controller
         $data = [
             'sale' => $sale->load(['customer', 'saleDetails.product', 'saleDetails.variant']),
             'company' => [
-                'name' => config('app.name'), 
+                'name' => config('app.name'),
                 'address' => '123 Business Street, City, State 10001',
                 'phone' => '(123) 456-7890',
                 'email' => 'info@yourbusiness.com',
                 'logo' => asset('images/product.png') // Use asset() for web path
             ]
         ];
-    
+
         return view('app.sales.sale_invoice_print', $data);
     }
 
@@ -190,18 +190,40 @@ class SaleController extends Controller
                 'email' => 'info@yourbusiness.com'
             ]
         ];
-        
+
         $pdf = PDF::loadView('app.sales.sale_invoice_pdf', $data);
-        
-        return $pdf->download('invoice-'.$sale->invoice_no.'.pdf');
-    
+
+        return $pdf->download('invoice-' . $sale->invoice_no . '.pdf');
     }
 
+    // In SaleController.php
+    public function getSaleItems(Sale $sale)
+    {
+        $items = $sale->saleDetails()->with(['product', 'variant'])
+            ->get()
+            ->map(function ($detail) {
+                // Calculate already returned quantities
+                $returnedQty = $detail->returnDetails()->sum('quantity_returned');
+
+                return [
+                    'id' => $detail->id,
+                    'product_name' => $detail->product->name,
+                    'variant_name' => $detail->variant?->name,
+                    'sell_price' => $detail->sell_price,
+                    'quantity' => $detail->quantity,
+                    'remaining_quantity' => $detail->quantity - $returnedQty,
+                    'tax_per_unit' => $detail->sale->tax / $detail->sale->saleDetails->sum('quantity'),
+                    'discount_per_unit' => $detail->sale->discount / $detail->sale->saleDetails->sum('quantity')
+                ];
+            });
+
+        return response()->json(['items' => $items]);
+    }
 
     // public function edit(Sale $sale)
     // {
     //     $sale->load(['customer', 'saleDetails.product', 'saleDetails.variant']);
-        
+
     //     return view('app.sales.edit', [
     //         'sale' => $sale,
     //         'customers' => Customer::all(),

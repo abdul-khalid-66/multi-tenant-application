@@ -18,6 +18,7 @@ use App\Http\Controllers\App\{
     BackendController,
     InventoryLogController,
     InvoiceController,
+    ProductReturnController,
 };
 
 use Illuminate\Support\Facades\Route;
@@ -96,10 +97,10 @@ Route::middleware([
 
 
             Route::get('/sales/{sale}/print', [SaleController::class, 'printInvoice'])
-            ->name('sales.print');
-        
+                ->name('sales.print');
+
             Route::get('/sales/{sale}/invoice-pdf', [SaleController::class, 'generateInvoicePDF'])
-            ->name('sales.invoice.pdf');
+                ->name('sales.invoice.pdf');
 
 
             Route::prefix('invoices')->group(function () {
@@ -109,6 +110,15 @@ Route::middleware([
                 Route::get('/{id}/print', [InvoiceController::class, 'print'])->name('invoices.print');
                 Route::get('/{id}/pdf', [InvoiceController::class, 'generatePdf'])->name('invoices.pdf');
             });
+
+
+
+            // Return/refund 
+            Route::get('sales/{sale}/items', [\App\Http\Controllers\App\SaleController::class, 'getSaleItems'])
+                ->name('sales.items');
+            Route::resource('returns', ProductReturnController::class);
+            Route::get('returns/analytics', [ProductReturnController::class, 'analytics'])->name('returns.analytics');
+            Route::post('returns/{return}/approve', [ProductReturnController::class, 'approve'])->name('returns.approve');
         });
     });
 

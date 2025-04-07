@@ -43,7 +43,7 @@ class ProductReturn extends Model
         return $this->belongsTo(Customer::class);
     }
 
-    public function details()
+    public function returnDetails()
     {
         return $this->hasMany(ReturnDetail::class, 'return_id');
     }

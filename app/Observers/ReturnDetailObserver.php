@@ -9,9 +9,11 @@ class ReturnDetailObserver
     /**
      * Handle the ReturnDetail "created" event.
      */
-    public function created(ReturnDetail $returnDetail): void
+    public function created(ReturnDetail $detail)
     {
-        //
+        if ($detail->return->status === 'approved' && $detail->variant_id) {
+            $detail->variant->increment('stock_quantity', $detail->quantity_returned);
+        }
     }
 
     /**

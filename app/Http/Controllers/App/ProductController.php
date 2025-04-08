@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 
 use App\Models\Product;
 use App\Models\Category;
+use App\Models\InventoryLog;
 use App\Models\Supplier;
 use App\Models\ProductVariant;
 use Illuminate\Http\Request;
@@ -196,4 +197,18 @@ class ProductController extends Controller
         return redirect()->route('products.index')
             ->with('success', 'Product deleted successfully.');
     }
+
+    public function lowStock()
+    {
+       
+        $lowStockItems = ProductVariant::with('product')
+        ->whereColumn('stock_quantity', '<', 'products.reorder_level')
+        ->join('products', 'product_variants.product_id', '=', 'products.id')
+        ->select('product_variants.*')
+        ->get();
+            
+        return view('app.sales.inventory_control.low-stock', compact('lowStockItems'));
+
+    }
+
 }

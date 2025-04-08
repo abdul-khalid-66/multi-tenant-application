@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\App\{
+    ActivityController,
     ProfileController,
     UserController,
     ProductController,
@@ -154,13 +155,16 @@ Route::middleware([
             // });
 
             // // Activities
-            // Route::get('/activities', [ActivityController::class, 'index'])->name('activities.index');
+            Route::get('/activities', [ActivityController::class, 'index'])->name('activities.index');
 
             // // Tasks
             // Route::prefix('tasks')->group(function () {
             //     Route::get('/', [TaskController::class, 'index'])->name('tasks.index');
             // });
             // });
+
+            Route::get('/inventory/low-stock', [ProductController::class, 'lowStock'])
+            ->name('inventory.low-stock');
         });
     });
 

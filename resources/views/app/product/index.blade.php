@@ -64,7 +64,7 @@
                                 </thead>
                                 <tbody class="bg-white divide-y divide-gray-200">
                                     @foreach($products as $product)
-                                    <tr class="hover:bg-gray-50">
+                                    <tr class="hover:bg-gray-50" data-category-id="{{ $product->category->id }}">
                                         <td class="px-6 py-4 whitespace-nowrap">
                                             <div class="flex items-center">
                                                 <div class="flex-shrink-0 h-10 w-10">
@@ -155,7 +155,7 @@
         </div>
     </div>
 
-    @push('scripts')
+    @push('js')
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Search functionality

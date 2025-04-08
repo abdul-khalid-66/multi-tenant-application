@@ -49,7 +49,7 @@ Route::middleware([
     });
 
 
-    Route::get('dashboard', [BackendController::class, 'dashboard'])->middleware(['auth', 'verified'])->name('dashboard');
+    Route::get('dashboard', [BackendController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard');
 
     Route::middleware('auth')->group(function () {
 
@@ -127,6 +127,40 @@ Route::middleware([
 
             Route::get('returns_product/analytics', [ProductReturnController::class, 'analytics'])->name('returns.analytics');
             Route::get('returns_product/approve', [ProductReturnController::class, 'approval'])->name('returns.approvals');
+
+            // Route::middleware(['auth', 'verified'])->group(function () {
+            // Dashboard
+            Route::get('/dashboard', [BackendController::class, 'index'])->name('dashboard');
+
+            // Sales
+            Route::prefix('sales')->group(function () {
+                Route::get('/', [SaleController::class, 'index'])->name('sales.index');
+            });
+
+            // Reports
+            // Route::prefix('reports')->group(function () {
+            //     Route::get('/financial', [ReportController::class, 'financial'])->name('reports.financial');
+            // });
+
+            // // Inventory
+            // Route::prefix('inventory')->group(function () {
+            //     Route::get('/', [InventoryController::class, 'index'])->name('inventory.index');
+            //     Route::get('/low-stock', [InventoryController::class, 'lowStock'])->name('inventory.low-stock');
+            // });
+
+            // // Returns
+            // Route::prefix('returns')->group(function () {
+            //     Route::get('/', [ProductReturnController::class, 'index'])->name('returns.index');
+            // });
+
+            // // Activities
+            // Route::get('/activities', [ActivityController::class, 'index'])->name('activities.index');
+
+            // // Tasks
+            // Route::prefix('tasks')->group(function () {
+            //     Route::get('/', [TaskController::class, 'index'])->name('tasks.index');
+            // });
+            // });
         });
     });
 

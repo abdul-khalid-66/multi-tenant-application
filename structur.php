@@ -1,7 +1,7 @@
 Here’s the **structured documentation** for your database tables, including **column names**, **data types**, and
 **purpose** for each column. This will help you understand the structure and ensure consistency in your database design.
 ### **0. Users Table**
-Stores Users Details.
+Stores Users table.
 | **Column** | name | email | password |
 
 ### **1. Products Table**

@@ -172,10 +172,10 @@
                             <input type="number" name="items[${itemCount}][quantity]" min="1" value="${item ? item.quantity : 1}" class="quantity mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" required>
                         </div>
 
-                        <!-- Price -->
+                        <!-- Price (now read-only) -->
                         <div class="md:col-span-2">
                             <label class="block text-sm font-medium text-gray-700">Price *</label>
-                            <input type="number" step="0.01" min="0" name="items[${itemCount}][sell_price]" value="${item ? item.sell_price : ''}" class="price mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" required>
+                            <input type="number" step="0.01" min="0" name="items[${itemCount}][sell_price]" value="${item ? item.sell_price : ''}" class="price mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-gray-100" readonly required>
                         </div>
 
                         <!-- Remove Button -->
@@ -210,6 +210,34 @@
                 const productSelect = itemRow.querySelector('.product-select');
                 const variantSelect = itemRow.querySelector('.variant-select');
                 const priceInput = itemRow.querySelector('.price');
+                const quantityInput = itemRow.querySelector('.quantity');
+
+                // Function to update price based on selections
+                function updatePrice() {
+                    const productId = productSelect.value;
+                    const variantId = variantSelect.value;
+                    const quantity = parseFloat(quantityInput.value) || 1;
+                    const product = products.find(p => p.id == productId);
+
+                    let unitPrice = 0;
+
+                    if (product) {
+                        const variants = product.variants || [];
+
+                        if (variantId) {
+                            const variant = variants.find(v => v.id == variantId);
+                            unitPrice = variant && variant.price_sale !== undefined ? parseFloat(variant.price_sale) : parseFloat(product.price_sale);
+                        } else {
+                            unitPrice = parseFloat(product.price_sale);
+                        }
+                    }
+
+                    const totalPrice = quantity * unitPrice;
+
+                    priceInput.value = isNaN(totalPrice) ? '0.00' : totalPrice.toFixed(2);
+
+                    calculateTotals();
+                }
 
                 // Update variants when product changes
                 productSelect.addEventListener('change', function() {
@@ -227,28 +255,14 @@
                             variantSelect.appendChild(option);
                         });
                     }
-
-                    // Set default price
-                    if (product) {
-                        priceInput.value = product.price.toFixed(2);
-                    }
+                    updatePrice();
                 });
 
                 // Update price when variant changes
-                variantSelect.addEventListener('change', function() {
-                    const productId = productSelect.value;
-                    const variantId = this.value;
-                    const product = products.find(p => p.id == productId);
-                    
-                    if (variantId && product) {
-                        const variant = product.variants.find(v => v.id == variantId);
-                        if (variant) {
-                            priceInput.value = variant.price.toFixed(2);
-                        }
-                    } else if (product) {
-                        priceInput.value = product.price.toFixed(2);
-                    }
-                });
+                variantSelect.addEventListener('change', updatePrice);
+
+                // Update totals when quantity changes
+                quantityInput.addEventListener('input', calculateTotals);
 
                 // Remove item button
                 itemRow.querySelector('.remove-item-btn').addEventListener('click', function() {
@@ -267,9 +281,6 @@
                     }
                 }
 
-                // Add event listeners for quantity and price changes
-                itemRow.querySelector('.quantity').addEventListener('input', calculateTotals);
-                itemRow.querySelector('.price').addEventListener('input', calculateTotals);
 
                 return itemRow;
             }
@@ -281,7 +292,10 @@
                 document.querySelectorAll('.item-row').forEach(row => {
                     const quantity = parseFloat(row.querySelector('.quantity').value) || 0;
                     const price = parseFloat(row.querySelector('.price').value) || 0;
-                    subtotal += quantity * price;
+                    const rowTotal = quantity * price;
+                    subtotal += rowTotal;
+                    const totalCell = row.querySelector('.total-per-row');
+                    if (totalCell) totalCell.textContent = 'Rs ' + rowTotal.toFixed(2);
                 });
 
                 const discount = parseFloat(document.getElementById('discount').value) || 0;
@@ -289,10 +303,10 @@
                 const total = subtotal - discount + tax;
 
                 // Update display
-                document.getElementById('subtotal').textContent = 'Rs' + subtotal.toFixed(2);
-                document.getElementById('discountDisplay').textContent = 'Rs' + discount.toFixed(2);
-                document.getElementById('taxDisplay').textContent = 'Rs' + tax.toFixed(2);
-                document.getElementById('total').textContent = 'Rs' + total.toFixed(2);
+                document.getElementById('subtotal').textContent = 'Rs ' + subtotal.toFixed(2);
+                document.getElementById('discountDisplay').textContent = 'Rs ' + discount.toFixed(2);
+                document.getElementById('taxDisplay').textContent = 'Rs ' + tax.toFixed(2);
+                document.getElementById('total').textContent = 'Rs ' + total.toFixed(2);
             }
 
             // Add event listeners for discount and tax

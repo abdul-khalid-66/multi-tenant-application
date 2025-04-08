@@ -58,19 +58,11 @@ class ReturnApprovalController extends Controller
 
         try {
             if ($validated['action'] === 'approve') {
-                // Process approval
+                // Process approval - observer will handle stock updates
                 $return->update([
                     'status' => 'approved',
                     'notes' => $validated['notes'] ?? null
                 ]);
-
-                // Restock items
-                foreach ($return->returnDetails as $detail) {
-                    if ($detail->variant_id) {
-                        ProductVariant::where('id', $detail->variant_id)
-                            ->increment('stock_quantity', $detail->quantity_returned);
-                    }
-                }
 
                 // Record cash movement
                 CashInHandDetail::create([

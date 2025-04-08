@@ -59,34 +59,60 @@ class ProductReturnObserver
     }
 
     /**
-     * Process approved return
+     * Process approved return 08/04/2025
      */
+    // protected function processReturn(ProductReturn $productReturn, string $reason = 'return_approved'): void
+    // {
+    //     $productReturn->returnDetails->each(function ($detail) use ($productReturn, $reason) {
+    //         $variant = ProductVariant::find($detail->variant_id);
+
+    //         if ($variant) {
+    //             $oldStock = $variant->stock_quantity;
+    //             $variant->increment('stock_quantity', $detail->quantity_returned);
+
+    //             InventoryLog::create([
+    //                 'product_id' => $detail->product_id,
+    //                 'variant_id' => $detail->variant_id,
+    //                 'old_stock' => $oldStock,
+    //                 'new_stock' => $variant->stock_quantity,
+    //                 'reason' => $reason,
+    //                 'date' => now(),
+    //                 'reference_id' => $productReturn->id,
+    //                 'reference_type' => ProductReturn::class
+    //             ]);
+    //         }
+    //     });
+
+    //     // Additional business logic could go here:
+    //     // - Create refund transaction
+    //     // - Notify customer
+    //     // - Update sales analytics
+    // }
+
+
     protected function processReturn(ProductReturn $productReturn, string $reason = 'return_approved'): void
     {
-        $productReturn->details->each(function ($detail) use ($productReturn, $reason) {
-            $variant = ProductVariant::find($detail->variant_id);
+        ProductVariant::withoutEvents(function () use ($productReturn, $reason) {
+            $productReturn->returnDetails->each(function ($detail) use ($productReturn, $reason) {
+                $variant = ProductVariant::find($detail->variant_id);
 
-            if ($variant) {
-                $oldStock = $variant->stock_quantity;
-                $variant->increment('stock_quantity', $detail->quantity_returned);
+                if ($variant) {
+                    $oldStock = $variant->stock_quantity;
+                    $variant->increment('stock_quantity', $detail->quantity_returned);
 
-                InventoryLog::create([
-                    'product_id' => $detail->product_id,
-                    'variant_id' => $detail->variant_id,
-                    'old_stock' => $oldStock,
-                    'new_stock' => $variant->stock_quantity,
-                    'reason' => $reason,
-                    'date' => now(),
-                    'reference_id' => $productReturn->id,
-                    'reference_type' => ProductReturn::class
-                ]);
-            }
+                    InventoryLog::create([
+                        'product_id' => $detail->product_id,
+                        'variant_id' => $detail->variant_id,
+                        'old_stock' => $oldStock,
+                        'new_stock' => $variant->stock_quantity,
+                        'reason' => $reason,
+                        'date' => now(),
+                        'reference_id' => $productReturn->id,
+                        'reference_type' => ProductReturn::class
+                    ]);
+                }
+            });
         });
-
-        // Additional business logic could go here:
-        // - Create refund transaction
-        // - Notify customer
-        // - Update sales analytics
     }
 
     /**

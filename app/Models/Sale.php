@@ -79,15 +79,19 @@ class Sale extends Model
         return $query->whereBetween('date', [$start, $end]);
     }
 
-    // Add this relationship
-    public function details()
-    {
-        return $this->hasMany(SaleDetail::class);
-    }
+    // Add this relationship 08/04/2025
+    // public function details()
+    // {
+    //     return $this->hasMany(SaleDetail::class);
+    // }
     public function saleDetails()
     {
         return $this->hasMany(SaleDetail::class);
     }
 
+    public function returns()
+    {
+        return $this->hasMany(ProductReturn::class, 'sale_id');
+    }
     // Remove payments relationship if exists
 }

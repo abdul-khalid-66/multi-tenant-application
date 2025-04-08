@@ -21,18 +21,24 @@
                                 
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700">Sale Invoice*</label>
-                                    <select name="sale_id" id="sale_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" required>
-                                        <option value="">Select Sale Invoice</option>
-                                        @foreach($sales as $sale)
-                                            <option value="{{ $sale->id }}" 
-                                                data-customer="{{ $sale->customer->name }} ({{ $sale->customer->contact }})">
-                                                #{{ $sale->invoice_no }} - {{ $sale->customer->name }} ({{ $sale->date->format('M d, Y') }})
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                    @error('sale_id')
-                                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                                    @enderror
+                                    @if($sales->isEmpty())
+                                        <div class="mt-1 p-2 bg-yellow-50 border border-yellow-200 rounded-md text-yellow-700">
+                                            No eligible sales found for return. All paid sales either already have return requests or have been fully returned.
+                                        </div>
+                                    @else
+                                        <select name="sale_id" id="sale_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" required>
+                                            <option value="">Select Sale Invoice</option>
+                                            @foreach($sales as $sale)
+                                                <option value="{{ $sale->id }}" 
+                                                    data-customer="{{ $sale->customer->name }} ({{ $sale->customer->contact }})">
+                                                    #{{ $sale->invoice_no }} - {{ $sale->customer->name }} ({{ $sale->date->format('M d, Y') }})
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                        @error('sale_id')
+                                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                        @enderror
+                                    @endif
                                 </div>
 
                                 <div class="md:col-span-2">
@@ -61,8 +67,8 @@
                                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sold Qty</th>
                                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Return Qty</th>
                                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Unit Price</th>
-                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Discount</th>
-                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tax</th>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Discount Per Item</th>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tax Per Item</th>
                                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
                                             </tr>
                                         </thead>
@@ -116,67 +122,46 @@
         };
     </script>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Update customer info when sale is selected
-            document.getElementById('sale_id').addEventListener('change', function() {
-                const selectedOption = this.options[this.selectedIndex];
-                const customerInfo = document.getElementById('customer-info');
-                
-                if (this.value) {
-                    customerInfo.textContent = selectedOption.dataset.customer;
-                } else {
-                    customerInfo.textContent = 'Select a sale invoice to view customer';
+        document.getElementById('sale_id').addEventListener('change', function() {
+            const saleId = this.value;
+            const container = document.getElementById('saleItemsContainer');
+            const noItemsMessage = document.getElementById('noItemsMessage');
+
+            if (!saleId) {
+                container.innerHTML = '';
+                noItemsMessage.style.display = '';
+                container.appendChild(noItemsMessage);
+                return;
+            }
+
+            fetch(route('sales.items', { sale: saleId }), {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                 }
-            });
+            })
+            .then(response => response.json())
+            .then(data => {
+                container.innerHTML = '';
+                
+                if (data.error) {
+                    throw new Error(data.message);
+                }
 
-            // Load sale items when sale is selected
-            document.getElementById('sale_id').addEventListener('change', function() {
-                const saleId = this.value;
-                const container = document.getElementById('saleItemsContainer');
-                const noItemsMessage = document.getElementById('noItemsMessage');
-
-                if (!saleId) {
-                    container.innerHTML = '';
+                const items = Array.isArray(data) ? data : [];
+                
+                if (items.length === 0) {
                     noItemsMessage.style.display = '';
                     container.appendChild(noItemsMessage);
                     return;
                 }
 
-                fetch(route('sales.items', { sale: saleId }), {
-                    headers: {
-                        'Accept': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                    }
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        return response.json().then(err => { 
-                            throw new Error(err.message || err.error || 'Network response was not ok'); 
-                        });
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    console.log('API Response:', data); // Debugging log
-                    
-                    container.innerHTML = '';
-                    
-                    // Handle both array response and object with items property
-                    const items = Array.isArray(data) ? data : (data.items || []);
-                    
-                    if (items.length === 0) {
-                        noItemsMessage.style.display = '';
-                        container.appendChild(noItemsMessage);
-                        return;
-                    }
-
-                    items.forEach(item => {
-                        const maxQty = item.remaining_quantity;
+                items.forEach(item => {
+                    if (item.remaining_quantity > 0) { // Only show items with remaining quantity
                         const row = document.createElement('tr');
                         row.className = 'item-row';
                         
-                        // Calculate per unit values with defaults
                         const unitPrice = parseFloat(item.sell_price) || 0;
                         const discountPerUnit = parseFloat(item.discount_per_unit) || 0;
                         const taxPerUnit = parseFloat(item.tax_per_unit) || 0;
@@ -197,7 +182,7 @@
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <input type="number" name="items[${item.id}][quantity]" 
-                                    min="1" max="${maxQty}" value="1" 
+                                    min="1" max="${item.remaining_quantity}" value="1" 
                                     class="w-20 rounded border-gray-300 quantity-input" 
                                     data-unit-price="${unitPrice}"
                                     data-discount="${discountPerUnit}"
@@ -205,25 +190,25 @@
                                     onchange="updateRowTotal(this)">
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap unit-price">
-                                $${unitPrice.toFixed(2)}
+                                Rs.${unitPrice.toFixed(2)}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap discount-per-unit">
-                                $${discountPerUnit.toFixed(2)}
+                                Rs.${discountPerUnit.toFixed(2)}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap tax-per-unit">
-                                $${taxPerUnit.toFixed(2)}
+                                Rs.${taxPerUnit.toFixed(2)}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap row-total">
-                                $${refundPerUnit}
+                                Rs.${refundPerUnit}
                             </td>
                         `;
                         container.appendChild(row);
-                    });
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Error: ' + error.message);
+                    }
                 });
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error: ' + error.message);
             });
         });
 
@@ -247,7 +232,7 @@
             
             // Calculate total refund (unit price + tax - discount) * quantity
             const totalRefund = ((unitPrice + taxPerUnit - discountPerUnit) * quantity).toFixed(2);
-            row.querySelector('.row-total').textContent = `$${totalRefund}`;
+            row.querySelector('.row-total').textContent = `Rs.${totalRefund}`;
         }
     </script>
     @endpush

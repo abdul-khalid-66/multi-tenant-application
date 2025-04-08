@@ -53,7 +53,9 @@ class SaleDetailObserver
 
         if ($variant) {
             $oldStock = $variant->stock_quantity;
-            $variant->decrement('stock_quantity', $saleDetail->quantity);
+            ProductVariant::withoutEvents(function () use ($variant, $saleDetail) {
+                $variant->decrement('stock_quantity', $saleDetail->quantity);
+            });
 
             InventoryLog::create([
                 'product_id' => $saleDetail->product_id,

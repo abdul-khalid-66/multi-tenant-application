@@ -38,4 +38,46 @@ class ReturnDetail extends Model
     {
         return $this->belongsTo(ProductVariant::class);
     }
+
+    // In your ReturnDetail model
+    // public function getPreviouslyReturned()
+    // {
+    //     if (!$this->saleDetail) {
+    //         return 0;
+    //     }
+        
+    //     return self::where('product_id', $this->product_id)
+    //         ->where('variant_id', $this->variant_id)
+    //         ->where('id', '!=', $this->id)
+    //         ->sum('quantity_returned');
+    // }
+
+    public function getPreviouslyReturned()
+    {
+        $saleDetail = $this->saleDetail();
+        if (!$saleDetail) {
+            return 0;
+        }
+        
+        return self::where('return_id', '!=', $this->return_id)
+            ->whereHas('return', function($query) use ($saleDetail) {
+                $query->where('sale_id', $saleDetail->sale_id);
+            })
+            ->where('product_id', $this->product_id)
+            ->where('variant_id', $this->variant_id)
+            ->sum('quantity_returned');
+    }
+
+    // In ReturnDetail.php
+    public function saleDetail()
+    {
+        // Get the sale_id from the parent return
+        $saleId = $this->return->sale_id;
+        
+        // Find the matching sale detail for this product/variant combination
+        return SaleDetail::where('sale_id', $saleId)
+            ->where('product_id', $this->product_id)
+            ->where('variant_id', $this->variant_id)
+            ->first();
+    }
 }

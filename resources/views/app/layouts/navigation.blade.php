@@ -15,14 +15,52 @@
                     <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                         {{ __('Dashboard') }}
                     </x-responsive-nav-link>
-                     <!-- Products Management -->
+                    <!-- Products Management -->
                     <x-responsive-nav-link :href="route('products.index')" :active="request()->routeIs('products.*')">
                         {{ __('Products') }}
                     </x-responsive-nav-link>
 
-                    <!-- Sales -->
+                    <!-- Sales Management -->
                     <x-responsive-nav-link :href="route('sales.index')" :active="request()->routeIs('sales.*')">
                         {{ __('Sales') }}
+                    </x-responsive-nav-link>
+
+                    <!-- Stock Management -->
+                    <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('inventory.*')">
+                        {{-- inventory.index  --}}
+                        {{ __('Stock') }}
+                    </x-responsive-nav-link>
+
+                    <!-- Supplier Management -->
+                    <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('suppliers.*')">
+                        {{-- suppliers.index --}}
+                        {{ __('Suppliers') }}
+                    </x-responsive-nav-link>
+
+                    <!-- Customers -->
+                    <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('customers.*')">
+                        {{-- customers.index --}}
+                        {{ __('Customers') }}
+                    </x-responsive-nav-link>
+
+                    <!-- Reporting & Analytics -->
+                    <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('reports.*')">
+                        {{-- reports.index --}}
+                        {{ __('Reports') }}
+                    </x-responsive-nav-link>
+
+                    <!-- User Management (Admin Only) -->
+                    @can('manage-users')
+                    <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('users.*')">
+                        {{-- users.index --}}
+                        {{ __('Users') }}
+                    </x-responsive-nav-link>
+                    @endcan
+
+                    <!-- Settings -->
+                    <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('settings.*')">
+                        {{-- settings.index --}}
+                        {{ __('Settings') }}
                     </x-responsive-nav-link>
                 </div>
             </div>
@@ -81,41 +119,44 @@
         
             <!-- Inventory Management -->
             <x-responsive-nav-link :href="route('products.index')" :active="request()->routeIs('products.*')">
-                {{ __('Inventory') }}
+                {{ __('Products') }}
             </x-responsive-nav-link>
-            <!-- Sales -->
+
             <x-responsive-nav-link :href="route('sales.index')" :active="request()->routeIs('sales.*')">
                 {{ __('Sales') }}
             </x-responsive-nav-link>
-            {{-- 
-            
-        
-            <!-- Customers & Returns -->
-            <x-responsive-nav-link :href="route('customers.index')" :active="request()->routeIs('customers.*')">
+
+            <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('inventory.*')">
+                {{-- inventory.index --}}
+                {{ __('Stock') }}
+            </x-responsive-nav-link>
+
+            <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('suppliers.*')">
+                {{-- suppliers.index --}}
+                {{ __('Suppliers') }}
+            </x-responsive-nav-link>
+
+            <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('customers.*')">
+                {{-- customers.index --}}
                 {{ __('Customers') }}
             </x-responsive-nav-link>
-        
-            <!-- Purchasing -->
-            <x-responsive-nav-link :href="route('suppliers.index')" :active="request()->routeIs('suppliers.*')">
-                {{ __('Purchasing') }}
-            </x-responsive-nav-link>
-        
-            <!-- Financials -->
-            <x-responsive-nav-link :href="route('expenses.index')" :active="request()->routeIs('expenses.*')">
-                {{ __('Financials') }}
-            </x-responsive-nav-link>
-        
-            <!-- Reports -->
-            <x-responsive-nav-link :href="route('reports.index')" :active="request()->routeIs('reports.*')">
+
+            <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('reports.*')">
+                {{-- reports.index --}}
                 {{ __('Reports') }}
             </x-responsive-nav-link>
-        
-            <!-- Users (Admin Only) -->
+
             @can('manage-users')
-            <x-responsive-nav-link :href="route('users.index')" :active="request()->routeIs('users.*')">
+            <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('users.*')">
+                {{-- users.index --}}
                 {{ __('Users') }}
             </x-responsive-nav-link>
-            @endcan --}}
+            @endcan
+
+            <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('settings.*')">
+                {{-- settings.index --}}
+                {{ __('Settings') }}
+            </x-responsive-nav-link>
         </div>
 
         <!-- Responsive Settings Options -->

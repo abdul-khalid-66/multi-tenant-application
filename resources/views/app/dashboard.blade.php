@@ -135,18 +135,19 @@
                     <div class="flex justify-between items-center mb-4">
                         <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Sales Performance</h3>
                         <div class="flex space-x-2">
-                            <button class="px-3 py-1 text-sm bg-blue-50 text-blue-600 rounded-md dark:bg-blue-900/30 dark:text-blue-400">Week</button>
-                            <button class="px-3 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded-md dark:text-gray-400 dark:hover:bg-gray-700">Month</button>
-                            <button class="px-3 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded-md dark:text-gray-400 dark:hover:bg-gray-700">Year</button>
+                            <button onclick="updateChart('week')" class="px-3 py-1 text-sm bg-blue-50 text-blue-600 rounded-md dark:bg-blue-900/30 dark:text-blue-400">Week</button>
+                            <button onclick="updateChart('month')" class="px-3 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded-md dark:text-gray-400 dark:hover:bg-gray-700">Month</button>
+                            <button onclick="updateChart('year')" class="px-3 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded-md dark:text-gray-400 dark:hover:bg-gray-700">Year</button>
                         </div>
                     </div>
                     <div class="h-64">
-                        @push('scripts')
+                        @push('js')
                         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
                         <script>
+                            let salesChart;
                             document.addEventListener('DOMContentLoaded', function() {
                                 const ctx = document.getElementById('salesChart').getContext('2d');
-                                const salesChart = new Chart(ctx, {
+                                salesChart = new Chart(ctx, {
                                     type: 'line',
                                     data: {
                                         labels: @json(array_column($salesData, 'date')),

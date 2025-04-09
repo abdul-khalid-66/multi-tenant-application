@@ -21,50 +21,42 @@ class BackendController extends Controller
     public function index()
     {
         // Today's date range
-        $today = Carbon::today();
-        $yesterday = Carbon::yesterday();
+        $today      = Carbon::today();
+        $yesterday  = Carbon::yesterday();
 
         // Current week date range
         $startOfWeek = Carbon::now()->startOfWeek();
-        $endOfWeek = Carbon::now()->endOfWeek();
+        $endOfWeek   = Carbon::now()->endOfWeek();
 
         // Last week date range for comparison
-        $lastWeekStart = Carbon::now()->subWeek()->startOfWeek();
-        $lastWeekEnd = Carbon::now()->subWeek()->endOfWeek();
+        $lastWeekStart  = Carbon::now()->subWeek()->startOfWeek();
+        $lastWeekEnd    = Carbon::now()->subWeek()->endOfWeek();
 
         // 1. Revenue Metrics
-        $todayRevenue = Sale::whereDate('created_at', $today)->sum('total_amount');
-        $yesterdayRevenue = Sale::whereDate('created_at', $yesterday)->sum('total_amount');
-        $revenueChange = $yesterdayRevenue > 0 ?
-            round((($todayRevenue - $yesterdayRevenue) / $yesterdayRevenue) * 100, 2) : 0;
+        $todayRevenue       = Sale::whereDate('created_at', $today)->sum('total_amount');
+        $yesterdayRevenue   = Sale::whereDate('created_at', $yesterday)->sum('total_amount');
+        $revenueChange      = $yesterdayRevenue > 0 ? round((($todayRevenue - $yesterdayRevenue) / $yesterdayRevenue) * 100, 2) : 0;
 
         // 2. Profit Metrics
-        $todayProfit = $this->calculateDailyProfit($today);
+        $todayProfit    = $this->calculateDailyProfit($today);
         $lastWeekProfit = $this->calculateWeeklyProfit($lastWeekStart, $lastWeekEnd);
-        $profitChange = $lastWeekProfit > 0 ?
-            round((($todayProfit - $lastWeekProfit) / $lastWeekProfit) * 100, 2) : 0;
+        $profitChange   = $lastWeekProfit > 0 ? round((($todayProfit - $lastWeekProfit) / $lastWeekProfit) * 100, 2) : 0;
 
         // 3. Inventory Status
         $totalProducts = Product::count();
 
         // Fixed low stock items query - assuming reorder_level is in products table
-        $lowStockItems = ProductVariant::join('products', 'product_variants.product_id', '=', 'products.id')
-            ->whereColumn('product_variants.stock_quantity', '<', 'products.reorder_level')
-            ->count();
+        $lowStockItems = ProductVariant::join('products', 'product_variants.product_id', '=', 'products.id')->whereColumn('product_variants.stock_quantity', '<', 'products.reorder_level')->count();
 
         // 4. Pending Tasks
         $pendingReturns = ProductReturn::where('status', 'pending')->count();
-        $pendingTasks = $pendingReturns + 2; // Example additional tasks
+        $pendingTasks   = $pendingReturns; 
 
         // 5. Sales Performance Chart Data - Fixed GROUP BY issue
         $salesData = Sale::select(
             DB::raw('DATE(created_at) as date'),
             DB::raw('SUM(total_amount) as total')
-        )
-            ->whereBetween('created_at', [$startOfWeek, $endOfWeek])
-            ->groupBy(DB::raw('DATE(created_at)')) // Fixed GROUP BY
-            ->orderBy('date')
-            ->get();
+        )->whereBetween('created_at', [$startOfWeek, $endOfWeek])->groupBy(DB::raw('DATE(created_at)'))->orderBy('date')->get();
 
         // Format for chart (fill in missing dates with 0)
         $formattedSalesData = [];
@@ -251,5 +243,77 @@ class BackendController extends Controller
 
         // Sort all activities by timestamp
         return $activities->sortByDesc('timestamp')->values()->all();
+    }
+
+
+
+
+    public function getSalesData(Request $request)
+    {
+        $period = $request->input('period', 'week');
+        
+        switch ($period) {
+            case 'month':
+                $startDate = Carbon::now()->startOfMonth();
+                $endDate = Carbon::now()->endOfMonth();
+                $groupBy = 'DATE(created_at)';
+                $dateFormat = 'D M j';
+                break;
+                
+            case 'year':
+                $startDate = Carbon::now()->startOfYear();
+                $endDate = Carbon::now()->endOfYear();
+                $groupBy = 'MONTH(created_at)';
+                $dateFormat = 'M Y';
+                break;
+                
+            case 'week':
+            default:
+                $startDate = Carbon::now()->startOfWeek();
+                $endDate = Carbon::now()->endOfWeek();
+                $groupBy = 'DATE(created_at)';
+                $dateFormat = 'D M j';
+                break;
+        }
+
+        $salesData = Sale::select(
+            DB::raw($groupBy . ' as date_group'),
+            DB::raw('SUM(total_amount) as total')
+        )
+        ->whereBetween('created_at', [$startDate, $endDate])
+        ->groupBy('date_group')
+        ->orderBy('date_group')
+        ->get();
+
+        // Format for chart
+        $results = [];
+        $currentDate = clone $startDate;
+        
+        while ($currentDate <= $endDate) {
+            $dateKey = $period === 'year' 
+                ? $currentDate->format('Y-m') 
+                : $currentDate->format('Y-m-d');
+                
+            $sale = $salesData->first(function ($item) use ($dateKey, $period) {
+                $itemDate = $period === 'year' 
+                    ? Carbon::parse($item->date_group)->format('Y-m')
+                    : Carbon::parse($item->date_group)->format('Y-m-d');
+                return $itemDate === $dateKey;
+            });
+
+            $results[] = [
+                'date' => $period === 'year' 
+                    ? $currentDate->format($dateFormat)
+                    : $currentDate->format($dateFormat),
+                'total' => $sale ? $sale->total : 0
+            ];
+
+            $period === 'year' ? $currentDate->addMonth() : $currentDate->addDay();
+        }
+
+        return response()->json([
+            'labels' => collect($results)->pluck('date'),
+            'values' => collect($results)->pluck('total')
+        ]);
     }
 }

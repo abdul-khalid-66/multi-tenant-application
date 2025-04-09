@@ -61,17 +61,20 @@ Route::middleware([
         Route::group(['middleware' => ['role:admin']], function () {
 
             Route::resource('users', UserController::class);
+            Route::resource('investments', InvestmentController::class);
+            // Dashboard
+            Route::get('/dashboard', [BackendController::class, 'index'])->name('dashboard');
+            Route::get('inventory-logs', [InventoryLogController::class, 'index'])->name('inventory-logs.index');
+
+            // Product Relate Route Here
             Route::resource('products', ProductController::class);
-            Route::resource('categories', CategoryController::class);
             Route::resource('product-variants', ProductVariantController::class);
+            Route::resource('categories', CategoryController::class);
             Route::resource('suppliers', SupplierController::class);
             Route::resource('customers', CustomerController::class);
-            Route::resource('investments', InvestmentController::class);
             Route::resource('sales', SaleController::class);
-
-            Route::get('sales/invoice/{invoice_no}', [SaleController::class, 'showByInvoice'])->name('sales.invoice');
-            // Expenses - Full resource
             Route::resource('expenses', ExpenseController::class)->except(['create', 'edit']);
+            Route::resource('returns', ProductReturnController::class);
 
             // Cash Flow Dashboard
             Route::prefix('cash')->group(function () {
@@ -86,22 +89,9 @@ Route::middleware([
                 Route::get('profit-loss/{profitLoss}', [ProfitLossController::class, 'show'])->name('profit-loss.show');
                 Route::get('profit-loss-summary', [ProfitLossController::class, 'summary'])->name('profit-loss.summary');
             });
-
             // Product Variants Routes
-            Route::resource('product-variants', ProductVariantController::class);
-
             // Inventory Logs Routes
-            Route::get('inventory-logs', [InventoryLogController::class, 'index'])
-                ->name('inventory-logs.index');
-
-
-            Route::get('/sales/{sale}/print', [SaleController::class, 'printInvoice'])
-                ->name('sales.print');
-
-            Route::get('/sales/{sale}/invoice-pdf', [SaleController::class, 'generateInvoicePDF'])
-                ->name('sales.invoice.pdf');
-
-
+            
             Route::prefix('invoices')->group(function () {
                 Route::get('/', [InvoiceController::class, 'index'])->name('invoices.index');
                 Route::get('/search', [InvoiceController::class, 'search'])->name('invoices.search');
@@ -109,33 +99,29 @@ Route::middleware([
                 Route::get('/{id}/print', [InvoiceController::class, 'print'])->name('invoices.print');
                 Route::get('/{id}/pdf', [InvoiceController::class, 'generatePdf'])->name('invoices.pdf');
             });
-
-
-
+                        
             // Return/refund 
-            Route::get('sales/{sale}/items', [\App\Http\Controllers\App\SaleController::class, 'getSaleItems'])
-                ->name('sales.items');
-
-            Route::resource('returns', ProductReturnController::class);
-
-            // routes/tenant.php
-            Route::get('returns/{return}/approve', [ReturnApprovalController::class, 'approve'])->name('returns.approve');
-            Route::get('returns/{return}/reject', [ReturnApprovalController::class, 'reject'])->name('returns.reject');
-            Route::post('returns/{return}/process', [ReturnApprovalController::class, 'process'])->name('returns.process');
-
-            // Route::get('returns/analytics', [ProductReturnController::class, 'analytics'])->name('returns.analytics');
-            // Route::post('returns/{return}/approve', [ProductReturnController::class, 'approve'])->name('returns.approve');
-
+            Route::prefix('returns')->group(function () {
+                Route::get('/{return}/approve', [ReturnApprovalController::class, 'approve'])->name('returns.approve');
+                Route::get('/{return}/reject', [ReturnApprovalController::class, 'reject'])->name('returns.reject');
+                Route::post('/{return}/process', [ReturnApprovalController::class, 'process'])->name('returns.process');
+                
+            });
+            
+            
             Route::get('returns_product/analytics', [ProductReturnController::class, 'analytics'])->name('returns.analytics');
             Route::get('returns_product/approve', [ProductReturnController::class, 'approval'])->name('returns.approvals');
+            
 
-            // Route::middleware(['auth', 'verified'])->group(function () {
-            // Dashboard
-            Route::get('/dashboard', [BackendController::class, 'index'])->name('dashboard');
 
+                
             // Sales
             Route::prefix('sales')->group(function () {
+                Route::get('/{sale}/print', [SaleController::class, 'printInvoice'])->name('sales.print');
+                Route::get('/{sale}/invoice-pdf', [SaleController::class, 'generateInvoicePDF'])->name('sales.invoice.pdf');
                 Route::get('/', [SaleController::class, 'index'])->name('sales.index');
+                Route::get('/invoice/{invoice_no}', [SaleController::class, 'showByInvoice'])->name('sales.invoice');
+                Route::get('/{sale}/items', [\App\Http\Controllers\App\SaleController::class, 'getSaleItems'])->name('sales.items');
             });
 
             // Reports
@@ -165,6 +151,21 @@ Route::middleware([
 
             Route::get('/inventory/low-stock', [ProductController::class, 'lowStock'])
             ->name('inventory.low-stock');
+
+
+
+
+
+
+
+
+            // Supplier Related Routes Here
+            
+
+
+
+
+
         });
     });
 

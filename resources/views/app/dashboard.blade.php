@@ -242,6 +242,7 @@
                                     document.getElementById('salesChart').style.opacity = '1';
                                 });
                             }
+                            updateChart('week')
                         </script>
                         @endpush
                         <canvas id="salesChart"></canvas>

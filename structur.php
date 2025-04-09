@@ -622,8 +622,9 @@ app/
     └── Controllers/
         └── App/
             └── SupplierManagement/
-                ├── StockTransferController.php
-                ├── PurchaseOrderController.php
-                ├── FinancialTrackingController.php
-                ├── SupplierPerformanceController.php
-                └── FinancialReportsController.php
+            |   ├── StockTransferController.php
+            |   ├── PurchaseOrderController.php
+            |   ├── FinancialTrackingController.php
+            |   ├── SupplierPerformanceController.php
+            |   └── FinancialReportsController.php
+            └──suppliercontorller.php    

@@ -32,7 +32,7 @@
                     </x-responsive-nav-link>
 
                     <!-- Supplier Management -->
-                    <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('suppliers.*')">
+                    <x-responsive-nav-link :href="route('suppliers.index')" :active="request()->routeIs('suppliers.*')">
                         {{-- suppliers.index --}}
                         {{ __('Suppliers') }}
                     </x-responsive-nav-link>
@@ -131,7 +131,7 @@
                 {{ __('Stock') }}
             </x-responsive-nav-link>
 
-            <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('suppliers.*')">
+            <x-responsive-nav-link :href="route('suppliers.index')" :active="request()->routeIs('suppliers.*')">
                 {{-- suppliers.index --}}
                 {{ __('Suppliers') }}
             </x-responsive-nav-link>

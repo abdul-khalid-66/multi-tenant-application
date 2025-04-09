@@ -22,4 +22,10 @@ class Supplier extends Model
     {
         return $this->hasMany(Product::class);
     }
+
+    public function inventoryLogs()
+    {
+        return $this->hasManyThrough(InventoryLog::class, Product::class);
+    }
+
 }

@@ -163,9 +163,25 @@ Route::middleware([
             
 
 
+            // Main supplier resource
+            Route::resource('suppliers', SupplierController::class);
 
+            // Supplier performance dashboard
 
+            
+            // Supplier performance dashboard
+            // Route::get('supplier/performance', [SupplierController::class, 'performance'])
+            //     ->name('suppliers.performance');
+                
+            // Supplier performance
+            Route::get('supplier/{supplier}/performance', [SupplierController::class, 'performance'])
+                ->name('suppliers.performance');
 
+            // Supplier products
+            Route::get('supplier/{supplier}/products', [SupplierController::class, 'products'])
+                ->name('suppliers.products');
+                
+  
         });
     });
 

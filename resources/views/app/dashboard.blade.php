@@ -152,19 +152,29 @@
                                     data: {
                                         labels: @json(array_column($salesData, 'date')),
                                         datasets: [{
-                                            label: 'Daily Sales ($)',
+                                            label: 'Sales (Rs)',
                                             data: @json(array_column($salesData, 'total')),
                                             backgroundColor: 'rgba(59, 130, 246, 0.05)',
                                             borderColor: 'rgba(59, 130, 246, 0.8)',
                                             borderWidth: 2,
                                             tension: 0.4,
-                                            fill: true
+                                            fill: true,
+                                            pointBackgroundColor: 'rgba(59, 130, 246, 1)',
+                                            pointRadius: 4,
+                                            pointHoverRadius: 6
                                         }]
                                     },
                                     options: {
                                         responsive: true,
                                         maintainAspectRatio: false,
                                         plugins: {
+                                            tooltip: {
+                                                callbacks: {
+                                                    label: function(context) {
+                                                        return '$' + context.raw.toLocaleString();
+                                                    }
+                                                }
+                                            },
                                             legend: {
                                                 display: false
                                             }
@@ -174,14 +184,64 @@
                                                 beginAtZero: true,
                                                 ticks: {
                                                     callback: function(value) {
-                                                        return '$' + value;
+                                                        return 'Rs' + value.toLocaleString();
                                                     }
+                                                },
+                                                grid: {
+                                                    color: 'rgba(0, 0, 0, 0.05)'
+                                                }
+                                            },
+                                            x: {
+                                                grid: {
+                                                    display: false
                                                 }
                                             }
                                         }
                                     }
                                 });
                             });
+                
+                            function updateChart(period) {
+                                // Show loading state
+                                document.getElementById('salesChart').style.opacity = '0.5';
+                                
+                                // Get CSRF token
+                                const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                                
+                                // Fetch new data
+                                fetch('/dashboard/sales-data', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'X-CSRF-TOKEN': token
+                                    },
+                                    body: JSON.stringify({period: period})
+                                })
+                                .then(response => response.json())
+                                .then(data => {
+                                    // Update chart data
+                                    salesChart.data.labels = data.labels;
+                                    salesChart.data.datasets[0].data = data.values;
+                                    salesChart.update();
+                                    
+                                    // Remove loading state
+                                    document.getElementById('salesChart').style.opacity = '1';
+                                    
+                                    // Update button active states
+                                    document.querySelectorAll('.period-button').forEach(btn => {
+                                        btn.classList.remove('bg-blue-50', 'text-blue-600', 'dark:bg-blue-900/30', 'dark:text-blue-400');
+                                        btn.classList.add('text-gray-600', 'hover:bg-gray-100', 'dark:text-gray-400', 'dark:hover:bg-gray-700');
+                                    });
+                                    
+                                    const activeButton = document.querySelector(`button[onclick="updateChart('${period}')"]`);
+                                    activeButton.classList.add('bg-blue-50', 'text-blue-600', 'dark:bg-blue-900/30', 'dark:text-blue-400');
+                                    activeButton.classList.remove('text-gray-600', 'hover:bg-gray-100', 'dark:text-gray-400', 'dark:hover:bg-gray-700');
+                                })
+                                .catch(error => {
+                                    console.error('Error fetching sales data:', error);
+                                    document.getElementById('salesChart').style.opacity = '1';
+                                });
+                            }
                         </script>
                         @endpush
                         <canvas id="salesChart"></canvas>

@@ -42,6 +42,14 @@ class BackendController extends Controller
         $lastWeekProfit = $this->calculateWeeklyProfit($lastWeekStart, $lastWeekEnd);
         $profitChange   = $lastWeekProfit > 0 ? round((($todayProfit - $lastWeekProfit) / $lastWeekProfit) * 100, 2) : 0;
 
+        // Change the profit comparison to be daily instead of weekly
+        // $todayProfit = $this->calculateDailyProfit($today);
+        // $yesterdayProfit = $this->calculateDailyProfit($yesterday);
+        // $profitChange = $yesterdayProfit > 0 
+        //     ? round((($todayProfit - $yesterdayProfit) / $yesterdayProfit) * 100, 2)
+        //     : 0;
+
+
         // 3. Inventory Status
         $totalProducts = Product::count();
 

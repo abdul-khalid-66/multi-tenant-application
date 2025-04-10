@@ -54,6 +54,16 @@
                                 </span>
                                 <span class="text-gray-500 ml-2 dark:text-gray-400">vs last week</span>
                             </div>
+                            <!-- Change the profit card text to show daily comparison -->
+                            {{-- <div class="flex items-center text-sm mt-1">
+                                <span class="text-{{ $profitChange >= 0 ? 'green' : 'red' }}-500 flex items-center">
+                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $profitChange >= 0 ? 'M13 7h8m0 0v8m0-8l-8 8-4-4-6 6' : 'M13 17h8m0 0V9m0 8l-8-8-4 4-6-6' }}"></path>
+                                    </svg>
+                                    {{ abs($profitChange) }}%
+                                </span>
+                                <span class="text-gray-500 ml-2 dark:text-gray-400">vs yesterday</span>
+                            </div> --}}
                         </div>
                         <div class="p-3 rounded-full bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

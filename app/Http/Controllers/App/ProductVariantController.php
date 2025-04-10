@@ -17,8 +17,9 @@ class ProductVariantController extends Controller
         $variants = ProductVariant::with('product')
             ->latest()
             ->paginate(10);
+        $products = Product::get();
 
-        return view('app.product.product_variants.index  ', compact('variants'));
+        return view('app.product.product_variants.index  ', compact('variants','products'));
     }
 
     /**

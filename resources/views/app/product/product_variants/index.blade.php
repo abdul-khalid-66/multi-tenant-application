@@ -10,6 +10,7 @@
                         <div class="flex justify-between items-center mb-6">
                             <h2 class="text-2xl font-bold">Product Variants</h2>
                             <a href="{{ route('product-variants.create') }}" class="btn btn-primary">
+                                <i class="fas fa-plus-square icon"></i>
                                 Add Variant
                             </a>
                         </div>
@@ -32,9 +33,9 @@
                             </select>
                             <select id="productFilter" class="border rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
                                 <option value="">All Products</option>
-                                {{-- @foreach($products as $product)
+                                @foreach($products as $product)
                                     <option value="{{ $product->id }}">{{ $product->name }}</option>
-                                @endforeach --}}
+                                @endforeach
                             </select>
                         </div>
 
@@ -133,7 +134,7 @@
         </div>
     </div>
 
-    @push('scripts')
+    @push('js')
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Search functionality

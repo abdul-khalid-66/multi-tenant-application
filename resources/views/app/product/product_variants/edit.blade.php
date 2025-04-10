@@ -9,8 +9,13 @@
                     <div class="p-6 text-gray-900">
                         <div class="flex justify-between items-center mb-6">
                             <h2 class="text-2xl font-bold">Edit Product Variant</h2>
-                            <a href="{{ route('product-variants.index') }}" class="btn btn-secondary">
-                                Back to Variants
+
+                            <a href="{{ route('product-variants.index') }}" 
+                                class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd"></path>
+                                </svg>
+                                Back
                             </a>
                         </div>
 
@@ -110,8 +115,12 @@
                             </div>
 
                             <div class="flex justify-end space-x-3">
-                                <button type="reset" class="btn btn-secondary">Reset</button>
-                                <button type="submit" class="btn btn-primary">Update Variant</button>
+                                <button type="reset" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-150">
+                                    Reset
+                                </button>
+                                <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-150">
+                                    Update Variant
+                                </button>
                             </div>
                         </form>
                     </div>

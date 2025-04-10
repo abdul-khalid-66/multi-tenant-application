@@ -9,6 +9,7 @@
                         <div class="flex justify-between items-center mb-6">
                             <h2 class="text-2xl font-bold">Product Categories</h2>
                             <a href="{{ route('categories.create') }}" class="btn btn-primary">
+                                <i class="fas fa-plus-square icon"></i>
                                 Add Category
                             </a>
                         </div>

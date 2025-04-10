@@ -9,6 +9,10 @@
                     <div class="p-6 text-gray-900">
                         <div class="flex justify-between items-center mb-6">
                             <h2 class="text-2xl font-bold">Product Management</h2>
+                            <a href="{{ route('products.create') }}" class="sidebar-item {{ request()->routeIs('products.create') ? 'active' : '' }}">
+                                <i class="fas fa-plus-square icon"></i>
+                                <span class="text">Add Product</span>
+                            </a>
                         </div>
 
                         <!-- Search and Filter Bar -->

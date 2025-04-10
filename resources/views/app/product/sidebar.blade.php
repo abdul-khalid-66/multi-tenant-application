@@ -152,13 +152,9 @@
 
     <a href="{{ route('products.index') }}" class="sidebar-item {{ request()->routeIs('products.index') ? 'active' : '' }}">
         <i class="fas fa-box icon"></i>
-        <span class="text">All Products</span>
+        <span class="text">Products</span>
     </a>
 
-    <a href="{{ route('products.create') }}" class="sidebar-item {{ request()->routeIs('products.create') ? 'active' : '' }}">
-        <i class="fas fa-plus-square icon"></i>
-        <span class="text">Add Product</span>
-    </a>
 
     <a href="{{ route('categories.index') }}" class="sidebar-item {{ request()->routeIs('categories.index') ? 'active' : '' }}">
         <i class="fas fa-layer-group icon"></i>

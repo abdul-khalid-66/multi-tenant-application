@@ -6,13 +6,20 @@
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
                 <div class="bg-white shadow-sm sm:rounded-lg">
                     <div class="p-6 text-gray-900">
-                        <h2 class="text-2xl font-bold mb-6">{{ isset($category) ? 'Edit' : 'Create' }} Category</h2>
+                        <div class="flex justify-between items-center mb-6">
+                            <h2 class="text-2xl font-bold mb-6">Create Category</h2>
+                            <a href="{{ route('categories.index') }}" 
+                                class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd"></path>
+                                </svg>
+                                Back
+                            </a>
+                        </div>
+                       
                         
-                        <form action="{{ isset($category) ? route('categories.update', $category->id) : route('categories.store') }}" method="POST">
+                        <form action="{{ route('categories.store') }}" method="POST">
                             @csrf
-                            @if(isset($category))
-                                @method('PUT')
-                            @endif
 
                             <div class="grid grid-cols-1 gap-6 mb-8">
                                 <div class="bg-gray-50 p-6 rounded-lg shadow">
@@ -39,8 +46,8 @@
                                 </div>
                             </div>
                             <div class="flex justify-end">
-                                <button type="submit" class="btn btn-primary">
-                                    {{ isset($category) ? 'Update' : 'Save' }} Category
+                                <button type="submit" class="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                   Save Category
                                 </button>
                             </div>
                         </form>

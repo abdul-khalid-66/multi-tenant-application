@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\App;
 
 use App\Http\Controllers\Controller;
+use App\Models\CashInHandDetail;
 use App\Models\Sale;
 use App\Models\Customer;
 use App\Models\Product;
@@ -137,7 +138,9 @@ class SaleController extends Controller
     public function show(Sale $sale)
     {
         $sale->load(['customer', 'saleDetails.product', 'saleDetails.variant']);
-        return view('app.sales.show', compact('sale'));
+        $totalQuantity   = $sale->saleDetails->sum('quantity');
+
+        return view('app.sales.show', compact('sale','totalQuantity'));
     }
 
     public function destroy(Sale $sale)
@@ -196,57 +199,62 @@ class SaleController extends Controller
 
         return $pdf->download('invoice-' . $sale->invoice_no . '.pdf');
     }
-// 08/04/2025
-    // public function getSaleItems(Sale $sale)
-    // {
-    //     try {
-    //         // Get all return details for this sale's products/variants
-    //         $returnDetails = ReturnDetail::whereIn('return_id', function ($query) use ($sale) {
-    //             $query->select('id')
-    //                 ->from('returns')
-    //                 ->where('sale_id', $sale->id);
-    //         })
-    //             ->get()
-    //             ->groupBy(function ($item) {
-    //                 return $item->product_id . '-' . $item->variant_id;
-    //             });
 
-    //         $items = $sale->saleDetails()->with(['product', 'variant'])
-    //             ->get()
-    //             ->map(function ($detail) use ($sale, $returnDetails) {
-    //                 // Find matching return details for this product/variant
-    //                 $key = $detail->product_id . '-' . $detail->variant_id;
-    //                 $returnedQty = $returnDetails->has($key)
-    //                     ? $returnDetails[$key]->sum('quantity_returned')
-    //                     : 0;
-
-    //                 $totalQuantity = $sale->saleDetails->sum('quantity');
-
-    //                 $taxPerUnit = $totalQuantity > 0 ? $sale->tax / $totalQuantity : 0;
-    //                 $discountPerUnit = $totalQuantity > 0 ? $sale->discount / $totalQuantity : 0;
-
-    //                 return [
-    //                     'id' => $detail->id,
-    //                     'product_id' => $detail->product_id,
-    //                     'variant_id' => $detail->variant_id,
-    //                     'product_name' => $detail->product->name,
-    //                     'variant_name' => $detail->variant?->name,
-    //                     'sell_price' => $detail->sell_price,
-    //                     'quantity' => $detail->quantity,
-    //                     'remaining_quantity' => $detail->quantity - $returnedQty,
-    //                     'tax_per_unit' => $taxPerUnit,
-    //                     'discount_per_unit' => $discountPerUnit
-    //                 ];
-    //             });
-
-    //         return response()->json($items);
-    //     } catch (\Exception $e) {
-    //         return response()->json([
-    //             'error' => 'Failed to load sale items',
-    //             'message' => $e->getMessage()
-    //         ], 500);
-    //     }
-    // }
+    public function updatePayment(Request $request, $id)
+    {
+        $sale = Sale::findOrFail($id);
+        
+        $request->validate([
+            'payment_status' => 'required|in:paid,pending,partial',
+            'amount_paid' => 'required_if:payment_status,partial|numeric|min:0|max:'.($sale->total_amount - ($sale->amount_paid ?? 0)),
+            'payment_method' => 'required|in:cash,credit_card,debit_card,transfer'
+        ]);
+        
+        // Initialize amount_paid if null
+        $currentAmountPaid = $sale->amount_paid ?? 0;
+        
+        // Update payment status and amount
+        if ($request->payment_status == 'partial') {
+            $newAmountPaid = $currentAmountPaid + $request->amount_paid;
+            
+            // Check if full amount paid
+            if ($newAmountPaid >= $sale->total_amount) {
+                $sale->payment_status = 'paid';
+                $sale->amount_paid = $sale->total_amount;
+            } else {
+                $sale->payment_status = 'partial';
+                $sale->amount_paid = $newAmountPaid;
+            }
+        } 
+        elseif ($request->payment_status == 'paid') {
+            $sale->amount_paid = $sale->total_amount;
+            $sale->payment_status = 'paid';
+        }
+        else {
+            $sale->amount_paid = 0;
+            $sale->payment_status = 'pending';
+        }
+        
+        $sale->payment_method = $request->payment_method;
+        $sale->save();
+        
+        // Cash in hand update if payment received
+        if ($request->payment_status == 'paid' || $request->payment_status == 'partial') {
+            $paymentAmount = ($request->payment_status == 'paid') 
+                ? ($sale->total_amount - $currentAmountPaid)
+                : $request->amount_paid;
+                
+            CashInHandDetail::create([
+                'date' => now(),
+                'amount' => $paymentAmount,
+                'transaction_type' => 'sale_payment',
+                'reference_id' => $sale->id,
+                'payment_method' => $request->payment_method
+            ]);
+        }
+        
+        return redirect()->back()->with('success', 'Payment status updated successfully');
+    }
 
     public function getSaleItems(Sale $sale)
     {

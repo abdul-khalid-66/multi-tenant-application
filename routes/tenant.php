@@ -66,7 +66,8 @@ Route::middleware([
             Route::get('/dashboard', [BackendController::class, 'index'])->name('dashboard');
             Route::get('inventory-logs', [InventoryLogController::class, 'index'])->name('inventory-logs.index');
             Route::post('/dashboard/sales-data', [BackendController::class, 'getSalesData'])->name('dashboard.sales-data'); // dashboard sale performanc data get ajax
-
+            Route::put('/sales/{id}/update-payment', [SaleController::class, 'updatePayment'])
+            ->name('sales.updatePayment');
             // Product Relate Route Here
             Route::resource('products', ProductController::class);
             Route::resource('product-variants', ProductVariantController::class);

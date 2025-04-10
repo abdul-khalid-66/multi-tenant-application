@@ -89,11 +89,20 @@
                                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Variant</th>
                                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Unit Price</th>
                                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Qty</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Discount</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tax</th>
                                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Unit</th>
                                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
                                     </tr>
                                 </thead>
                                 <tbody class="bg-white divide-y divide-gray-200">
+                                    @php
+                                        $subtotal = 0;
+                                        $totalQuantity = $sale->saleDetails->sum('quantity');
+                                        $discountPerItem = $totalQuantity > 0 ? $sale->discount / $totalQuantity : 0;
+                                        $taxPerItem = $totalQuantity > 0 ? $sale->tax / $totalQuantity : 0;
+                                    @endphp
+                                    
                                     @foreach($sale->saleDetails as $item)
                                     <tr>
                                         <td class="px-6 py-4 whitespace-nowrap">
@@ -103,18 +112,27 @@
                                             <div class="text-sm text-gray-500">{{ $item->variant?->name ?? 'N/A' }}</div>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            ${{ number_format($item->sell_price, 2) }}
+                                            Rs. {{ number_format($item->sell_price, 2) }}
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                             {{ $item->quantity }}
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            Rs. {{ number_format($discountPerItem * $item->quantity, 2) }}
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            Rs. {{ number_format($taxPerItem * $item->quantity, 2) }}
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                             {{ $item->unit ?? 'pcs' }}
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                            ${{ number_format($item->total_price, 2) }}
+                                            Rs. {{ number_format(($item->sell_price * $item->quantity) - ($discountPerItem * $item->quantity) + ($taxPerItem * $item->quantity), 2) }}
                                         </td>
                                     </tr>
+                                    @php
+                                        $subtotal += ($item->sell_price * $item->quantity) - ($discountPerItem * $item->quantity) + ($taxPerItem * $item->quantity);
+                                    @endphp
                                     @endforeach
                                 </tbody>
                             </table>
@@ -127,19 +145,19 @@
                                     <div class="space-y-2">
                                         <div class="flex justify-between">
                                             <span class="font-medium">Subtotal:</span>
-                                            <span>${{ number_format($sale->total_amount + $sale->discount - $sale->tax, 2) }}</span>
+                                            <span>Rs.{{ number_format($subtotal, 2) }}</span>
                                         </div>
                                         <div class="flex justify-between">
                                             <span class="font-medium">Discount:</span>
-                                            <span>-${{ number_format($sale->discount, 2) }}</span>
+                                            <span>Rs. {{ number_format($sale->discount, 2) }}</span>
                                         </div>
                                         <div class="flex justify-between">
                                             <span class="font-medium">Tax:</span>
-                                            <span>${{ number_format($sale->tax, 2) }}</span>
+                                            <span>Rs. {{ number_format($sale->tax, 2) }}</span>
                                         </div>
                                         <div class="flex justify-between text-lg font-bold border-t pt-2">
                                             <span>Total:</span>
-                                            <span>${{ number_format($sale->total_amount, 2) }}</span>
+                                            <span>Rs.{{ number_format($sale->total_amount + $sale->discount - $sale->tax, 2) }}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -157,6 +175,85 @@
                                 <p class="text-gray-700">{{ $sale->notes ?? 'No notes available' }}</p>
                             </div>
                         </div>
+
+                        <!-- Payment Status Update Section -->
+                        @if($sale->payment_status != 'paid')
+                        <div class="mt-8 bg-gray-50 p-6 rounded-lg">
+                            <h3 class="text-lg font-medium mb-4">Payment Update</h3>
+                            
+                            <form action="{{ route('sales.updatePayment', $sale->id) }}" method="POST">
+                                @csrf
+                                @method('PUT')
+                                
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    <!-- Current Status -->
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700">Current Status</label>
+                                        <div class="mt-1 p-2 bg-gray-100 rounded">
+                                            @if($sale->payment_status == 'paid')
+                                                <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-sm">Paid</span>
+                                            @elseif($sale->payment_status == 'pending')
+                                                <span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm">Pending</span>
+                                            @else
+                                                <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">Partial (Rs. {{ number_format($sale->amount_paid, 2) }}/{{ number_format($sale->total_amount, 2) }})</span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- New Status -->
+                                    <div>
+                                        <label for="payment_status" class="block text-sm font-medium text-gray-700">New Status *</label>
+                                        <select name="payment_status" id="payment_status" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" required>
+                                            <option value="paid" {{ $sale->payment_status == 'paid' ? 'selected' : '' }}>Paid</option>
+                                            <option value="pending" {{ $sale->payment_status == 'pending' ? 'selected' : '' }}>Pending</option>
+                                            <option value="partial" {{ $sale->payment_status == 'partial' ? 'selected' : '' }}>Partial</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <!-- Amount Paid (for partial) -->
+                                    <div id="amountPaidField" style="{{ $sale->payment_status != 'partial' ? 'display: none;' : '' }}">
+                                        <label for="amount_paid" class="block text-sm font-medium text-gray-700">Amount Paid *</label>
+                                        <input type="number" step="0.01" min="0" max="{{ $sale->total_amount - $sale->amount_paid }}" 
+                                            name="amount_paid" id="amount_paid" 
+                                            value="{{ $sale->payment_status == 'partial' ? $sale->total_amount - $sale->amount_paid : '' }}" 
+                                            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                            placeholder="Enter amount">
+                                        <p class="mt-1 text-xs text-gray-500">Remaining: Rs. {{ number_format($sale->total_amount - $sale->amount_paid, 2) }}</p>
+                                    </div>
+                                </div>
+                                
+                                <!-- Payment Method -->
+                                <div class="mt-4">
+                                    <label for="payment_method" class="block text-sm font-medium text-gray-700">Payment Method *</label>
+                                    <select name="payment_method" id="payment_method" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" required>
+                                        <option value="cash" {{ $sale->payment_method == 'cash' ? 'selected' : '' }}>Cash</option>
+                                        <option value="credit_card" {{ $sale->payment_method == 'credit_card' ? 'selected' : '' }}>Credit Card</option>
+                                        <option value="debit_card" {{ $sale->payment_method == 'debit_card' ? 'selected' : '' }}>Debit Card</option>
+                                        <option value="transfer" {{ $sale->payment_method == 'transfer' ? 'selected' : '' }}>Bank Transfer</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="mt-6">
+                                    <button type="submit" class="btn btn-primary">Update Payment</button>
+                                </div>
+                            </form>
+                        </div>
+
+                        @push('js')
+                        <script>
+                            document.getElementById('payment_status').addEventListener('change', function() {
+                                const amountField = document.getElementById('amountPaidField');
+                                if (this.value === 'partial') {
+                                    amountField.style.display = 'block';
+                                } else {
+                                    amountField.style.display = 'none';
+                                }
+                            });
+                        </script>
+                        @endpush
+                        @endif
+
+
                     </div>
                 </div>
             </div>

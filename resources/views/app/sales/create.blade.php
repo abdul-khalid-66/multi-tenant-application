@@ -44,6 +44,17 @@
                                     </select>
                                 </div>
 
+                              <!-- Payment Status Field ke baad ye add karein -->
+                                <div id="partialAmountField" style="display: none;">
+                                    <label for="partial_amount" class="block text-sm font-medium text-gray-700">Partial Amount Paid *</label>
+                                    <input type="number" step="0.01" min="0" 
+                                        name="partial_amount" 
+                                        id="partial_amount" 
+                                        class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                    <p id="partialAmountHelp" class="mt-1 text-xs text-gray-500">
+                                        Maximum: Rs <span id="maxPartialAmount">0.00</span>
+                                    </p>
+                                </div>
                                 <div>
                                     <label for="payment_method" class="block text-sm font-medium text-gray-700">Payment Method *</label>
                                     <select name="payment_method" id="payment_method" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" required>
@@ -316,6 +327,21 @@
             // Add first item row by default
             addItemRow();
         });
+    </script>
+
+    <script>
+      
+        // Payment status change handler
+        document.getElementById('payment_status').addEventListener('change', function() {
+            const partialField = document.getElementById('partialAmountField');
+            if (this.value === 'partial') {
+                partialField.style.display = 'block';
+                updateMaxPartialAmount();
+            } else {
+                partialField.style.display = 'none';
+            }
+        });
+
     </script>
     @endpush
 </x-tenant-app-layout>

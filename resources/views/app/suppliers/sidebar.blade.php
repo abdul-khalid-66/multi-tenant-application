@@ -299,8 +299,8 @@
     </a>
 
     <!-- Investments -->
-    {{-- {{ route('suppliers.investments') }} --}}
-    <a href="" class="sidebar-item {{ request()->routeIs('suppliers.investments') ? 'active' : '' }}">
+    {{--  --}}
+    <a href="{{ route('investments.index') }}" class="sidebar-item {{ request()->routeIs('investments.index') ? 'active' : '' }}">
         <span class="icon">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                 <path fill-rule="evenodd" d="M12 8a1 1 0 100-2H7.707l-.707-.707a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l2-2A1 1 0 0012 8zm-5 4a1 1 0 100 2h4.293l.707.707a1 1 0 001.414-1.414l-2-2a1 1 0 00-1.414 0l-2 2A1 1 0 007 12z" clip-rule="evenodd" />

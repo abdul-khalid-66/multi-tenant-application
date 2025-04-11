@@ -21,6 +21,7 @@ use App\Http\Controllers\App\{
     InvoiceController,
     ProductReturnController,
     ReturnApprovalController,
+    InvestmentReportController,
 };
 
 use Illuminate\Support\Facades\Route;
@@ -61,7 +62,6 @@ Route::middleware([
         Route::group(['middleware' => ['role:admin']], function () {
 
             Route::resource('users', UserController::class);
-            Route::resource('investments', InvestmentController::class);
             // Dashboard
             Route::get('/dashboard', [BackendController::class, 'index'])->name('dashboard');
             Route::get('inventory-logs', [InventoryLogController::class, 'index'])->name('inventory-logs.index');
@@ -155,6 +155,24 @@ Route::middleware([
             ->name('inventory.low-stock');
 
 
+            // Route::resource('investments', InvestmentController::class);
+
+
+            // investment routes
+
+            Route::prefix('investments')->group(function() {
+                Route::get('/', [InvestmentController::class, 'index'])->name('investments.index');
+                Route::get('/create', [InvestmentController::class, 'create'])->name('investments.create');
+                Route::post('/', [InvestmentController::class, 'store'])->name('investments.store');
+                Route::get('/{investment}', [InvestmentController::class, 'show'])->name('investments.show');
+                Route::get('/{investment}/edit', [InvestmentController::class, 'edit'])->name('investments.edit');
+                Route::put('/{investment}', [InvestmentController::class, 'update'])->name('investments.update');
+                Route::delete('/{investment}', [InvestmentController::class, 'destroy'])->name('investments.destroy');
+                
+                // Reports
+                Route::get('/reports/summary', [InvestmentReportController::class, 'summary'])->name('investments.reports.summary');
+                Route::get('/reports/returns', [InvestmentReportController::class, 'returns'])->name('investments.reports.returns');
+            });
 
 
 

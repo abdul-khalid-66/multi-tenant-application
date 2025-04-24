@@ -101,6 +101,11 @@
                                         $totalQuantity = $sale->saleDetails->sum('quantity');
                                         $discountPerItem = $totalQuantity > 0 ? $sale->discount / $totalQuantity : 0;
                                         $taxPerItem = $totalQuantity > 0 ? $sale->tax / $totalQuantity : 0;
+
+                                        // $unitPrice = 0;
+                                        $unitQuantity = 0;
+                                        $subDiscount = 0;
+                                        $subtex = 0;
                                     @endphp
                                     
                                     @foreach($sale->saleDetails as $item)
@@ -131,9 +136,21 @@
                                         </td>
                                     </tr>
                                     @php
+                                        // $unitPrice += $item->sell_price;
+                                        $unitQuantity += $item->quantity;
+                                        $subDiscount += $discountPerItem * $item->quantity;
+                                        $subtex += $taxPerItem * $item->quantity;
                                         $subtotal += ($item->sell_price * $item->quantity) - ($discountPerItem * $item->quantity) + ($taxPerItem * $item->quantity);
                                     @endphp
                                     @endforeach
+                                    <tr>
+                                        <td colspan="2" class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900"> </td>
+                                        <td colspan="1" class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900"> Total</td>
+                                        <td colspan="1" class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900"> {{ number_format($unitQuantity) }}</td>
+                                        <td colspan="1" class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">  {{ number_format($subDiscount, 2) }}</td>
+                                        <td colspan="2" class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">  {{ number_format($subtex, 2) }}</td>
+                                        <td colspan="2" class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">  {{ number_format($subtotal, 2) }}</td>
+                                    </tr>
                                 </tbody>
                             </table>
                         </div>
@@ -143,10 +160,10 @@
                             <div class="md:col-start-3">
                                 <div class="bg-gray-50 p-4 rounded-lg">
                                     <div class="space-y-2">
-                                        <div class="flex justify-between">
-                                            <span class="font-medium">Subtotal:</span>
-                                            <span>Rs.{{ number_format($subtotal, 2) }}</span>
-                                        </div>
+                                        <div class="flex justify-between text-lg font-bold border-t pt-2">
+                                            <span>Total:</span>
+                                            <span>Rs.{{ number_format($sale->total_amount + $sale->tex - $sale->descount, 2) }}</span>
+                                        </div>                                       
                                         <div class="flex justify-between">
                                             <span class="font-medium">Discount:</span>
                                             <span>Rs. {{ number_format($sale->discount, 2) }}</span>
@@ -155,9 +172,9 @@
                                             <span class="font-medium">Tax:</span>
                                             <span>Rs. {{ number_format($sale->tax, 2) }}</span>
                                         </div>
-                                        <div class="flex justify-between text-lg font-bold border-t pt-2">
-                                            <span>Total:</span>
-                                            <span>Rs.{{ number_format($sale->total_amount + $sale->discount - $sale->tax, 2) }}</span>
+                                        <div class="flex justify-between">
+                                            <span class="font-medium">Subtotal:</span>
+                                            <span>Rs.{{ number_format($subtotal, 2) }}</span>
                                         </div>
                                     </div>
                                 </div>

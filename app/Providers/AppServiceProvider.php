@@ -32,11 +32,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        ProductVariant::observe(InventoryLogObserver::class);
-        SaleDetail::observe(SaleDetailObserver::class);
-        ReturnDetail::observe(ReturnDetailObserver::class);
-        ProductReturn::observe(ProductReturnObserver::class);
-        Expense::observe(ExpenseObserver::class);
-        ProfitLoss::observe(ProfitLossObserver::class);
+
     }
 }
